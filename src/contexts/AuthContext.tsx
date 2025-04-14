@@ -20,7 +20,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  register: (userData: any) => Promise<boolean>;
+  register: (userData: any, role: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -58,7 +58,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const login = async (email: string, password: string) => {
     try {
       const response = await api.post("/api/auth/login/", {
-        username: email, // Django REST framework expects 'username' instead of 'email'
+        email: email, // Используем email вместо username
         password,
       });
       const token = response.data.token;
@@ -77,14 +77,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  const register = async (userData: any) => {
+  const register = async (userData: any, role: string) => {
     try {
       const endpoint =
-        userData.role === "therapist"
+        role === "therapist"
           ? "/api/auth/register/therapist/"
           : "/api/auth/register/client/";
 
+      console.log(`Отправка на ${endpoint}:`, userData);
       const response = await api.post(endpoint, userData);
+
       const token = response.data.token;
       localStorage.setItem("authToken", token);
       setToken(token);

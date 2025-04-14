@@ -6,7 +6,9 @@ interface RegisterFormData {
   email: string;
   password: string;
   confirmPassword: string;
-  name: string;
+  firstName: string;
+  lastName: string;
+  inviteCode: string;
   role: "user" | "therapist";
 }
 
@@ -17,7 +19,9 @@ const RegisterPage: React.FC = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    name: "",
+    firstName: "",
+    lastName: "",
+    inviteCode: "",
     role: "user",
   });
   const [error, setError] = useState<string>("");
@@ -30,13 +34,27 @@ const RegisterPage: React.FC = () => {
     }
 
     try {
-      await register({
+      const apiData = {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
         email: formData.email,
         password: formData.password,
-        name: formData.name,
-        role: formData.role,
-      });
-      navigate("/dashboard");
+        password_confirm: formData.confirmPassword,
+        ...(formData.role === "therapist" && {
+          invite_code: formData.inviteCode,
+        }),
+      };
+
+      console.log("Отправка данных регистрации:", apiData);
+
+      const success = await register(apiData, formData.role);
+      if (success) {
+        navigate("/dashboard");
+      } else {
+        setError(
+          "Ошибка при регистрации. Проверьте данные и попробуйте снова."
+        );
+      }
     } catch (err) {
       setError(
         `Ошибка при регистрации: ${
@@ -70,15 +88,29 @@ const RegisterPage: React.FC = () => {
               )}
               <form onSubmit={handleSubmit}>
                 <div className="mb-3">
-                  <label htmlFor="name" className="form-label">
+                  <label htmlFor="firstName" className="form-label">
                     Имя
                   </label>
                   <input
                     type="text"
                     className="form-control"
-                    id="name"
-                    name="name"
-                    value={formData.name}
+                    id="firstName"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="lastName" className="form-label">
+                    Фамилия
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="lastName"
+                    name="lastName"
+                    value={formData.lastName}
                     onChange={handleChange}
                     required
                   />
@@ -140,6 +172,22 @@ const RegisterPage: React.FC = () => {
                     <option value="therapist">Психолог</option>
                   </select>
                 </div>
+                {formData.role === "therapist" && (
+                  <div className="mb-3">
+                    <label htmlFor="inviteCode" className="form-label">
+                      Код приглашения
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="inviteCode"
+                      name="inviteCode"
+                      value={formData.inviteCode}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                )}
                 <button type="submit" className="btn btn-primary w-100">
                   Зарегистрироваться
                 </button>
