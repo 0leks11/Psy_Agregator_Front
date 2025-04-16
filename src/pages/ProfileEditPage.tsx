@@ -44,6 +44,11 @@ const ProfileEditPage: React.FC = () => {
   const [displayHours, setDisplayHours] = useState(false);
   const [officeLocation, setOfficeLocation] = useState("");
 
+  // Новые поля для терапевтов
+  const [videoIntroUrl, setVideoIntroUrl] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+
   // Для клиентов
   const [requestDetails, setRequestDetails] = useState("");
   const [selectedTopicIds, setSelectedTopicIds] = useState<number[]>([]);
@@ -104,6 +109,9 @@ const ProfileEditPage: React.FC = () => {
         setTotalHours(typedUser.therapist_profile.total_hours_worked ?? "");
         setDisplayHours(typedUser.therapist_profile.display_hours || false);
         setOfficeLocation(typedUser.therapist_profile.office_location || "");
+        setVideoIntroUrl(typedUser.therapist_profile.video_intro_url || "");
+        setWebsiteUrl(typedUser.therapist_profile.website_url || "");
+        setLinkedinUrl(typedUser.therapist_profile.linkedin_url || "");
       } else if (
         typedUser.profile?.role === "CLIENT" &&
         typedUser.client_profile
@@ -188,6 +196,9 @@ const ProfileEditPage: React.FC = () => {
             total_hours_worked: totalHours === "" ? null : Number(totalHours),
             display_hours: displayHours,
             office_location: officeLocation,
+            video_intro_url: videoIntroUrl || null,
+            website_url: websiteUrl || null,
+            linkedin_url: linkedinUrl || null,
           })
         );
       } else if (typedUser.profile?.role === "CLIENT") {
@@ -531,6 +542,64 @@ const ProfileEditPage: React.FC = () => {
                       </label>
                     </div>
                   ))}
+                </div>
+              </div>
+              <div className="mb-2">
+                <h3 className="text-md font-medium text-gray-700 mb-3">
+                  Дополнительная информация и ссылки
+                </h3>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label
+                      htmlFor="videoIntroUrl"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Ссылка на видео-визитку (Youtube, Vimeo и т.п.)
+                    </label>
+                    <input
+                      type="url"
+                      id="videoIntroUrl"
+                      value={videoIntroUrl}
+                      onChange={(e) => setVideoIntroUrl(e.target.value)}
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      disabled={saving}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="websiteUrl"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Личный сайт (опционально)
+                    </label>
+                    <input
+                      type="url"
+                      id="websiteUrl"
+                      value={websiteUrl}
+                      onChange={(e) => setWebsiteUrl(e.target.value)}
+                      placeholder="https://mypersonalsite.com"
+                      disabled={saving}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="linkedinUrl"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Профиль LinkedIn (опционально)
+                    </label>
+                    <input
+                      type="url"
+                      id="linkedinUrl"
+                      value={linkedinUrl}
+                      onChange={(e) => setLinkedinUrl(e.target.value)}
+                      placeholder="https://linkedin.com/in/yourname"
+                      disabled={saving}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

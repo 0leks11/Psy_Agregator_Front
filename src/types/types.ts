@@ -15,8 +15,8 @@ export interface TherapistProfileData {
   user_profile: number;
   about: string;
   experience_years: number;
-  skills: number[];
-  languages: number[];
+  skills: string[];
+  languages: string[];
   total_hours_worked: number | null;
   display_hours: boolean;
   office_location: string;
@@ -24,9 +24,11 @@ export interface TherapistProfileData {
   is_subscribed: boolean;
   created_at: string;
   updated_at: string;
+  video_intro_url: string | null;
+  website_url: string | null;
+  linkedin_url: string | null;
+  photos: TherapistPhotoData[];
 }
-
-
 
 export interface ClientProfileData {
   id: number;
@@ -55,6 +57,26 @@ export interface LanguageData {
   id: number;
   name: string;
   code?: string | null;
+}
+
+// Новые типы для фотографий и публикаций
+export interface TherapistPhotoData {
+  id: number;
+  therapist_profile: number;
+  image: string;
+  caption: string;
+  order: number;
+}
+
+export interface PublicationData {
+  id: number;
+  author: number | BaseUserData;
+  title: string;
+  content: string;
+  featured_image: string | null;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 // Опции для выбора пола
@@ -127,6 +149,10 @@ export interface TherapistProfileReadData {
   office_location: string | null;
   created_at: string;
   updated_at: string;
+  video_intro_url: string | null;
+  website_url: string | null;
+  linkedin_url: string | null;
+  photos: TherapistPhotoData[];
 }
 
 export interface ClientProfileReadData {
@@ -151,6 +177,10 @@ export interface TherapistPublicData {
   office_location: string | null;
   is_verified: boolean;
   is_subscribed: boolean;
+  video_intro_url: string | null;
+  website_url: string | null;
+  linkedin_url: string | null;
+  photos: TherapistPhotoData[];
 }
 
 export interface AuthResponse {
@@ -186,4 +216,39 @@ export interface ProfileUpdateData {
   office_location?: string;
   request_details?: string;
   interested_topics?: number[];
+  video_intro_url?: string | null;
+  website_url?: string | null;
+  linkedin_url?: string | null;
+}
+
+// Новые типы для обновления сервисов
+export interface TherapistProfileUpdateData {
+  about?: string;
+  experience_years?: number;
+  skills?: number[];
+  languages?: number[];
+  total_hours_worked?: number | null;
+  display_hours?: boolean;
+  office_location?: string;
+  video_intro_url?: string | null;
+  website_url?: string | null;
+  linkedin_url?: string | null;
+}
+
+export interface ClientProfileUpdateData {
+  request_details?: string;
+  interested_topics?: number[];
+}
+
+export interface TherapistPhotoUploadData {
+  image: File;
+  caption?: string;
+  order?: number;
+}
+
+export interface PublicationCreateUpdateData {
+  title: string;
+  content: string;
+  featured_image?: File | null;
+  is_published?: boolean;
 }

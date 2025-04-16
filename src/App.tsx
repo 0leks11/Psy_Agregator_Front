@@ -12,8 +12,9 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import TherapistListPage from "./pages/TherapistListPage";
 import TherapistDetailPage from "./pages/TherapistDetailPage";
+import PublicTherapistProfilePage from "./pages/PublicTherapistProfilePage";
 import DashboardPage from "./pages/DashboardPage";
-import ProfileEditPage from "./pages/ProfileEditPage";
+import MyProfileEditPage from "./pages/MyProfileEditPage";
 import SubscriptionPage from "./pages/SubscriptionPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
@@ -37,6 +38,10 @@ const App: React.FC = () => {
                 path="/therapists/:therapistId"
                 element={<TherapistDetailPage />}
               />
+              <Route
+                path="/therapist/:therapistProfileId"
+                element={<PublicTherapistProfilePage />}
+              />
 
               {/* Protected Routes */}
               <Route
@@ -51,7 +56,7 @@ const App: React.FC = () => {
                 path="/profile/edit"
                 element={
                   <ProtectedRoute>
-                    <ProfileEditPage />
+                    <MyProfileEditPage />
                   </ProtectedRoute>
                 }
               />

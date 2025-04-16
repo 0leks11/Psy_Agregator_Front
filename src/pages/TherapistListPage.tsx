@@ -1,27 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-
-interface Therapist {
-  id: string;
-  name: string;
-  specialization: string;
-  experience: number;
-  rating: number;
-  price: number;
-  image: string;
-}
+import { getTherapists } from "../services/therapistService";
+import { TherapistProfileReadData } from "../types/user";
 
 const TherapistListPage: React.FC = () => {
-  const [therapists, setTherapists] = useState<Therapist[]>([]);
+  const [therapists, setTherapists] = useState<TherapistProfileReadData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
     const fetchTherapists = async () => {
       try {
-        // Здесь будет API-запрос
-        const response = await fetch("/api/therapists");
-        const data = await response.json();
+        const data = await getTherapists();
         setTherapists(data);
       } catch (err) {
         setError("Ошибка при загрузке списка психологов");
@@ -61,28 +51,31 @@ const TherapistListPage: React.FC = () => {
           <div key={therapist.id} className="col">
             <div className="card h-100">
               <img
-                src={therapist.image}
+                src={
+                  therapist.profile.profile_picture_url ||
+                  "/default-therapist.jpg"
+                }
                 className="card-img-top"
-                alt={therapist.name}
+                alt={`${therapist.user.first_name} ${therapist.user.last_name}`}
                 style={{ height: "200px", objectFit: "cover" }}
               />
               <div className="card-body">
-                <h5 className="card-title">{therapist.name}</h5>
+                <h5 className="card-title">
+                  {therapist.user.first_name} {therapist.user.last_name}
+                </h5>
                 <p className="card-text">
-                  <strong>Специализация:</strong> {therapist.specialization}
+                  <strong>О себе:</strong> {therapist.about || "Нет информации"}
                 </p>
                 <p className="card-text">
-                  <strong>Опыт:</strong> {therapist.experience} лет
+                  <strong>Опыт:</strong> {therapist.experience_years} лет
                 </p>
                 <p className="card-text">
-                  <strong>Рейтинг:</strong>{" "}
-                  <span className="text-warning">
-                    {"★".repeat(Math.round(therapist.rating))}
-                    {"☆".repeat(5 - Math.round(therapist.rating))}
-                  </span>
+                  <strong>Навыки:</strong>{" "}
+                  {therapist.skills.map((skill) => skill.name).join(", ")}
                 </p>
                 <p className="card-text">
-                  <strong>Стоимость:</strong> {therapist.price} ₽/час
+                  <strong>Языки:</strong>{" "}
+                  {therapist.languages.map((lang) => lang.name).join(", ")}
                 </p>
                 <Link
                   to={`/therapists/${therapist.id}`}

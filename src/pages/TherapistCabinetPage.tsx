@@ -1,7 +1,7 @@
 import React from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { Link } from "react-router-dom";
-import { FullUserData } from "../types/user";
+import { FullUserData } from "../types/types";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 
 const TherapistCabinetPage: React.FC = () => {
@@ -28,6 +28,24 @@ const TherapistCabinetPage: React.FC = () => {
 
   const isVerified = typedUser.therapist_profile?.is_verified ?? false;
   const isSubscribed = typedUser.therapist_profile?.is_subscribed ?? false;
+
+  // Функция для форматирования URL
+  const formatUrl = (url: string | null): string => {
+    if (!url) return "";
+    return url.startsWith("http") ? url : `https://${url}`;
+  };
+
+  // Функция для получения имени хоста из URL
+  const getHostName = (url: string | null): string => {
+    if (!url) return "";
+    try {
+      const formattedUrl = formatUrl(url);
+      const hostname = new URL(formattedUrl).hostname;
+      return hostname.replace("www.", "");
+    } catch (e) {
+      return url;
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
@@ -119,6 +137,62 @@ const TherapistCabinetPage: React.FC = () => {
             </div>
           )}
 
+          {/* Социальные сети и видео */}
+          {(typedUser.therapist_profile?.website_url ||
+            typedUser.therapist_profile?.linkedin_url ||
+            typedUser.therapist_profile?.video_intro_url) && (
+            <div>
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                Ссылки и медиа
+              </h3>
+              <div className="flex flex-wrap gap-3 mb-3">
+                {typedUser.therapist_profile?.website_url && (
+                  <a
+                    href={formatUrl(typedUser.therapist_profile.website_url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 bg-gray-100 text-blue-600 px-3 py-2 rounded-lg hover:bg-gray-200 transition"
+                  >
+                    <i className="fas fa-globe"></i>
+                    <span>
+                      {getHostName(typedUser.therapist_profile.website_url)}
+                    </span>
+                  </a>
+                )}
+                {typedUser.therapist_profile?.linkedin_url && (
+                  <a
+                    href={formatUrl(typedUser.therapist_profile.linkedin_url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 bg-gray-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition"
+                  >
+                    <i className="fab fa-linkedin"></i>
+                    <span>LinkedIn</span>
+                  </a>
+                )}
+              </div>
+
+              {typedUser.therapist_profile?.video_intro_url && (
+                <div className="mt-3">
+                  <h4 className="text-md font-medium text-gray-600 mb-2">
+                    Видео-визитка
+                  </h4>
+                  <div className="aspect-w-16 aspect-h-9">
+                    <iframe
+                      src={typedUser.therapist_profile.video_intro_url}
+                      title="Видео-визитка"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="rounded-lg shadow-sm"
+                      style={{ height: "220px" }}
+                    ></iframe>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {typedUser.therapist_profile?.skills &&
             typedUser.therapist_profile.skills.length > 0 && (
               <div>
@@ -188,6 +262,18 @@ const TherapistCabinetPage: React.FC = () => {
             className="flex items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <span className="text-blue-600">Статистика</span>
+          </Link>
+          <Link
+            to="/photos"
+            className="flex items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <span className="text-blue-600">Управление фотографиями</span>
+          </Link>
+          <Link
+            to="/publications"
+            className="flex items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <span className="text-blue-600">Мои публикации</span>
           </Link>
         </div>
       </div>

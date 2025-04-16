@@ -1,13 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { getTherapistById } from "../services/therapistService";
-import { TherapistProfileData } from "../types/user";
+import {
+  getTherapistById,
+  getTherapistPhotos,
+} from "../services/therapistService";
+import {
+  TherapistPublicProfileData,
+  TherapistPhotoData,
+} from "../types/models";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ErrorMessage from "../components/common/ErrorMessage";
+import PhotoGallery from "../components/therapists/PhotoGallery";
 
 const TherapistDetailPage: React.FC = () => {
   const { therapistId } = useParams<{ therapistId: string }>();
-  const [therapist, setTherapist] = useState<TherapistProfileData | null>(null);
+  const [therapist, setTherapist] = useState<TherapistPublicProfileData | null>(
+    null
+  );
+  const [photos, setPhotos] = useState<TherapistPhotoData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const defaultImage = "/default-avatar.png";
@@ -24,6 +34,10 @@ const TherapistDetailPage: React.FC = () => {
         setError("");
         const data = await getTherapistById(parseInt(therapistId, 10));
         setTherapist(data);
+
+        // Загружаем фотографии психолога
+        const photosData = await getTherapistPhotos(parseInt(therapistId, 10));
+        setPhotos(photosData);
       } catch (err: any) {
         setError(
           err.response?.data?.detail ||
@@ -47,6 +61,12 @@ const TherapistDetailPage: React.FC = () => {
   if (error) return <ErrorMessage message={error} />;
   if (!therapist) return <ErrorMessage message="Специалист не найден." />;
 
+  // Функция для форматирования URL (добавляет https:// если его нет)
+  const formatUrl = (url: string | null): string => {
+    if (!url) return "";
+    return url.startsWith("http") ? url : `https://${url}`;
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="bg-white shadow-lg rounded-lg p-6 md:p-8">
@@ -62,20 +82,62 @@ const TherapistDetailPage: React.FC = () => {
             <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1">
               {therapist.user.first_name} {therapist.user.last_name}
             </h1>
-            {therapist.profile.gender &&
-              therapist.profile.gender_code !== "UNKNOWN" && (
-                <p className="text-md text-gray-500 mb-2">
-                  {therapist.profile.gender}
-                </p>
-              )}
+            {therapist.profile.gender !== "UNKNOWN" && (
+              <p className="text-md text-gray-500 mb-2">
+                {therapist.profile.gender_display}
+              </p>
+            )}
             <p className="text-lg text-blue-600 font-semibold mb-2">
               {therapist.experience_years} лет опыта
             </p>
             <p className="text-sm text-gray-600">
               Формат/Местоположение: {therapist.office_location || "Не указано"}
             </p>
+
+            {/* Социальные сети и контакты */}
+            <div className="mt-3 flex flex-wrap justify-center md:justify-start space-x-3">
+              {therapist.website_url && (
+                <a
+                  href={formatUrl(therapist.website_url)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  <i className="fas fa-globe mr-1"></i> Сайт
+                </a>
+              )}
+              {therapist.linkedin_url && (
+                <a
+                  href={formatUrl(therapist.linkedin_url)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  <i className="fab fa-linkedin mr-1"></i> LinkedIn
+                </a>
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Видео-визитка */}
+        {therapist.video_intro_url && (
+          <div className="mb-6 pb-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-700 mb-3">
+              Видео-визитка
+            </h2>
+            <div className="aspect-w-16 aspect-h-9">
+              <iframe
+                src={therapist.video_intro_url}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full rounded-lg shadow-md"
+                style={{ height: "315px" }}
+              ></iframe>
+            </div>
+          </div>
+        )}
 
         {/* О себе */}
         {therapist.about && (
@@ -87,6 +149,13 @@ const TherapistDetailPage: React.FC = () => {
           </div>
         )}
 
+        {/* Галерея фотографий */}
+        {therapist.photos && therapist.photos.length > 0 && (
+          <div className="mb-6 pb-6 border-b border-gray-200">
+            <PhotoGallery photos={therapist.photos} />
+          </div>
+        )}
+
         {/* Специализация */}
         {therapist.skills && therapist.skills.length > 0 && (
           <div className="mb-6 pb-6 border-b border-gray-200">
@@ -94,12 +163,12 @@ const TherapistDetailPage: React.FC = () => {
               Специализация
             </h2>
             <div className="flex flex-wrap gap-2">
-              {therapist.skills.map((skill) => (
+              {therapist.skills.map((skill, index) => (
                 <span
-                  key={skill.id}
+                  key={index}
                   className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
                 >
-                  {skill.name}
+                  {skill}
                 </span>
               ))}
             </div>
@@ -111,12 +180,12 @@ const TherapistDetailPage: React.FC = () => {
           <div className="mb-6 pb-6 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-700 mb-3">Языки</h2>
             <div className="flex flex-wrap gap-2">
-              {therapist.languages.map((lang) => (
+              {therapist.languages.map((lang, index) => (
                 <span
-                  key={lang.id}
+                  key={index}
                   className="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full"
                 >
-                  {lang.name}
+                  {lang}
                 </span>
               ))}
             </div>
