@@ -1,41 +1,35 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-
-interface Therapist {
-  id: string;
-  name: string;
-  specialization: string;
-  experience: number;
-  rating: number;
-  price: number;
-  image: string;
-  description: string;
-  education: string[];
-  methods: string[];
-  schedule: {
-    [key: string]: string[];
-  };
-}
+import { getTherapistById } from "../services/therapistService";
+import { TherapistProfileData } from "../types/user";
+import LoadingSpinner from "../components/common/LoadingSpinner";
+import ErrorMessage from "../components/common/ErrorMessage";
 
 const TherapistDetailPage: React.FC = () => {
   const { therapistId } = useParams<{ therapistId: string }>();
-  const [therapist, setTherapist] = useState<Therapist | null>(null);
+  const [therapist, setTherapist] = useState<TherapistProfileData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState("");
+  const defaultImage = "/default-avatar.png";
 
   useEffect(() => {
     const fetchTherapist = async () => {
+      if (!therapistId) {
+        setError("ID специалиста отсутствует.");
+        setLoading(false);
+        return;
+      }
       try {
-        // Здесь будет API-запрос
-        const response = await fetch(`/api/therapists/${therapistId}`);
-        const data = await response.json();
+        setLoading(true);
+        setError("");
+        const data = await getTherapistById(parseInt(therapistId, 10));
         setTherapist(data);
-      } catch (err) {
+      } catch (err: any) {
         setError(
-          `Ошибка при загрузке данных психолога: ${
-            err instanceof Error ? err.message : "Неизвестная ошибка"
-          }`
+          err.response?.data?.detail ||
+            "Не удалось загрузить информацию о специалисте."
         );
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -44,109 +38,121 @@ const TherapistDetailPage: React.FC = () => {
     fetchTherapist();
   }, [therapistId]);
 
-  if (loading) {
+  if (loading)
     return (
-      <div className="container text-center">
-        <div className="spinner-border" role="status">
-          <span className="visually-hidden">Загрузка...</span>
-        </div>
+      <div className="flex justify-center items-center h-64">
+        <LoadingSpinner />
       </div>
     );
-  }
-
-  if (error || !therapist) {
-    return (
-      <div className="container">
-        <div className="alert alert-danger" role="alert">
-          {error || "Психолог не найден"}
-        </div>
-      </div>
-    );
-  }
+  if (error) return <ErrorMessage message={error} />;
+  if (!therapist) return <ErrorMessage message="Специалист не найден." />;
 
   return (
-    <div className="container">
-      <div className="row">
-        <div className="col-md-4">
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="bg-white shadow-lg rounded-lg p-6 md:p-8">
+        {/* Заголовок и основная информация */}
+        <div className="flex flex-col md:flex-row items-center md:items-start mb-6 md:mb-8">
           <img
-            src={therapist.image}
-            alt={therapist.name}
-            className="img-fluid rounded shadow"
+            src={therapist.profile.profile_picture_url || defaultImage}
+            alt={`${therapist.user.first_name} ${therapist.user.last_name}`}
+            className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover mb-4 md:mb-0 md:mr-8 border-2 border-gray-200"
+            onError={(e) => (e.currentTarget.src = defaultImage)}
           />
+          <div className="text-center md:text-left">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1">
+              {therapist.user.first_name} {therapist.user.last_name}
+            </h1>
+            {therapist.profile.gender &&
+              therapist.profile.gender_code !== "UNKNOWN" && (
+                <p className="text-md text-gray-500 mb-2">
+                  {therapist.profile.gender}
+                </p>
+              )}
+            <p className="text-lg text-blue-600 font-semibold mb-2">
+              {therapist.experience_years} лет опыта
+            </p>
+            <p className="text-sm text-gray-600">
+              Формат/Местоположение: {therapist.office_location || "Не указано"}
+            </p>
+          </div>
         </div>
-        <div className="col-md-8">
-          <h2>{therapist.name}</h2>
-          <p className="lead">{therapist.specialization}</p>
-          <div className="mb-3">
-            <strong>Опыт:</strong> {therapist.experience} лет
+
+        {/* О себе */}
+        {therapist.about && (
+          <div className="mb-6 pb-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-700 mb-3">О себе</h2>
+            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
+              {therapist.about}
+            </p>
           </div>
-          <div className="mb-3">
-            <strong>Рейтинг:</strong>{" "}
-            <span className="text-warning">
-              {"★".repeat(Math.round(therapist.rating))}
-              {"☆".repeat(5 - Math.round(therapist.rating))}
-            </span>
+        )}
+
+        {/* Специализация */}
+        {therapist.skills && therapist.skills.length > 0 && (
+          <div className="mb-6 pb-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-700 mb-3">
+              Специализация
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {therapist.skills.map((skill) => (
+                <span
+                  key={skill.id}
+                  className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
+                >
+                  {skill.name}
+                </span>
+              ))}
+            </div>
           </div>
-          <div className="mb-3">
-            <strong>Стоимость:</strong> {therapist.price} ₽/час
+        )}
+
+        {/* Языки */}
+        {therapist.languages && therapist.languages.length > 0 && (
+          <div className="mb-6 pb-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-700 mb-3">Языки</h2>
+            <div className="flex flex-wrap gap-2">
+              {therapist.languages.map((lang) => (
+                <span
+                  key={lang.id}
+                  className="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full"
+                >
+                  {lang.name}
+                </span>
+              ))}
+            </div>
           </div>
-          <button className="btn btn-primary">
-            Записаться на консультацию
+        )}
+
+        {/* Часы практики */}
+        {therapist.total_hours_worked !== null && (
+          <div className="mb-6 pb-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-700 mb-3">
+              Часы практики
+            </h2>
+            <p className="text-gray-600">
+              {therapist.total_hours_worked} часов
+            </p>
+            <p className="text-xs text-gray-500 italic">
+              (По данным специалиста)
+            </p>
+          </div>
+        )}
+
+        {/* Контактная информация */}
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold text-gray-700 mb-3">
+            Контактная информация
+          </h2>
+          <p className="text-gray-600 mb-4">
+            Контактная информация доступна после авторизации или прямого
+            запроса.
+          </p>
+          <button
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition duration-150"
+            disabled
+          >
+            Записаться на консультацию (в разработке)
           </button>
-        </div>
-      </div>
-
-      <div className="row mt-4">
-        <div className="col-12">
-          <h3>О психологе</h3>
-          <p>{therapist.description}</p>
-        </div>
-      </div>
-
-      <div className="row mt-4">
-        <div className="col-md-6">
-          <h3>Образование</h3>
-          <ul>
-            {therapist.education.map((edu, index) => (
-              <li key={index}>{edu}</li>
-            ))}
-          </ul>
-        </div>
-        <div className="col-md-6">
-          <h3>Методы работы</h3>
-          <ul>
-            {therapist.methods.map((method, index) => (
-              <li key={index}>{method}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      <div className="row mt-4">
-        <div className="col-12">
-          <h3>Расписание</h3>
-          <div className="table-responsive">
-            <table className="table">
-              <thead>
-                <tr>
-                  {Object.keys(therapist.schedule).map((day) => (
-                    <th key={day}>{day}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  {Object.values(therapist.schedule).map((times, index) => (
-                    <td key={index}>
-                      {times.map((time, timeIndex) => (
-                        <div key={timeIndex}>{time}</div>
-                      ))}
-                    </td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
-          </div>
         </div>
       </div>
     </div>

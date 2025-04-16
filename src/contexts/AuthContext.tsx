@@ -3,24 +3,32 @@ import React, {
   useState,
   useContext,
   useEffect,
+  useCallback,
   ReactNode,
 } from "react";
 import api from "../services/api"; // Your configured axios instance
-
-interface User {
-  id: string;
-  email: string;
-  role: "user" | "therapist";
-}
+import { loginUser, registerUser } from "../services/authService";
+import { getMyProfile } from "../services/profileService";
+import LoadingSpinner from "../components/common/LoadingSpinner";
+import { FullUserData } from "../types/user";
 
 interface AuthContextType {
-  user: User | null;
+  user: FullUserData | null;
   token: string | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  error: string | null;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  register: (userData: any, role: string) => Promise<boolean>;
+  register: (userData: {
+    email: string;
+    password: string;
+    first_name: string;
+    last_name: string;
+    role: "CLIENT" | "THERAPIST";
+    invite_code?: string;
+  }) => Promise<boolean>;
+  updateUserState: (userData: FullUserData) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,99 +36,110 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(
-    localStorage.getItem("authToken")
-  );
-  const [loading, setLoading] = useState(true); // Check auth on initial load
+  const [user, setUser] = useState<FullUserData | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchUser = useCallback(async () => {
+    console.log("AuthProvider: Загрузка профиля пользователя...");
+    const currentToken = localStorage.getItem("authToken");
+    if (currentToken) {
+      try {
+        const userData = await getMyProfile();
+        if (userData) {
+          setUser(userData);
+          console.log("AuthProvider: Профиль пользователя загружен", userData);
+        } else {
+          console.error(
+            "AuthProvider: Не удалось получить данные пользователя"
+          );
+          localStorage.removeItem("authToken");
+          setUser(null);
+          setToken(null);
+        }
+      } catch (error) {
+        console.error("AuthProvider: Ошибка при загрузке профиля", error);
+        localStorage.removeItem("authToken");
+        setUser(null);
+        setToken(null);
+      }
+    } else {
+      setUser(null);
+      setToken(null);
+    }
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
-    const verifyToken = async () => {
-      if (token) {
-        api.defaults.headers.common["Authorization"] = `Token ${token}`; // Or Bearer for JWT
-        try {
-          // Replace with your actual endpoint to verify token/get user data
-          const response = await api.get("/api/auth/user/"); // Example endpoint
-          setUser(response.data);
-        } catch (error) {
-          console.error("Auth Error:", error);
-          localStorage.removeItem("authToken");
-          setToken(null);
-          setUser(null);
-          delete api.defaults.headers.common["Authorization"];
-        }
-      }
-      setLoading(false);
-    };
-    verifyToken();
-  }, [token]);
+    fetchUser();
+  }, [fetchUser]);
 
-  const login = async (email: string, password: string) => {
-    try {
-      const response = await api.post("/api/auth/login/", {
-        email: email, // Используем email вместо username
-        password,
-      });
-      const token = response.data.token;
-      localStorage.setItem("authToken", token);
-      setToken(token);
-
-      // Get user data after successful login
-      const userResponse = await api.get("/api/auth/user/");
-      setUser(userResponse.data);
-
-      api.defaults.headers.common["Authorization"] = `Token ${token}`;
-      return true;
-    } catch (error) {
-      console.error("Login Error:", error);
-      return false;
-    }
+  const updateUserState = (userData: FullUserData) => {
+    console.log("AuthProvider: Обновление состояния пользователя", userData);
+    setUser(userData);
   };
 
-  const register = async (userData: any, role: string) => {
+  const login = async (email: string, password: string): Promise<void> => {
     try {
-      const endpoint =
-        role === "therapist"
-          ? "/api/auth/register/therapist/"
-          : "/api/auth/register/client/";
-
-      console.log(`Отправка на ${endpoint}:`, userData);
-      const response = await api.post(endpoint, userData);
-
-      const token = response.data.token;
-      localStorage.setItem("authToken", token);
-      setToken(token);
-      setUser(response.data.user);
-      api.defaults.headers.common["Authorization"] = `Token ${token}`;
-      return true;
+      const data = await loginUser({ email, password });
+      if (data && data.token && data.user) {
+        localStorage.setItem("authToken", data.token);
+        setToken(data.token);
+        setUser(data.user);
+        console.log("AuthProvider: Успешный вход", data.user);
+      }
     } catch (error) {
-      console.error("Register Error:", error);
-      return false;
+      console.error("AuthProvider: Ошибка входа", error);
+      setError("Ошибка входа");
     }
   };
 
   const logout = () => {
     localStorage.removeItem("authToken");
-    setToken(null);
     setUser(null);
-    delete api.defaults.headers.common["Authorization"];
-    // Optional: Call backend logout endpoint if needed
+    setToken(null);
+  };
+
+  const register = async (userData: {
+    email: string;
+    password: string;
+    first_name: string;
+    last_name: string;
+    role: "CLIENT" | "THERAPIST";
+    invite_code?: string;
+  }): Promise<boolean> => {
+    try {
+      const data = await registerUser(userData);
+      if (data && data.token && data.user) {
+        localStorage.setItem("authToken", data.token);
+        setToken(data.token);
+        setUser(data.user);
+        console.log("AuthProvider: Успешная регистрация", data.user);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("AuthProvider: Ошибка регистрации", error);
+      return false;
+    }
   };
 
   const value: AuthContextType = {
     user,
     token,
-    isAuthenticated: !!token,
+    isAuthenticated: !!user,
     loading,
+    error,
     login,
     logout,
     register,
+    updateUserState,
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}{" "}
-      {/* Render children only after initial auth check */}
+      {loading ? <LoadingSpinner /> : children}
     </AuthContext.Provider>
   );
 };

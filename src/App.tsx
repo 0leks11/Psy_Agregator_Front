@@ -13,7 +13,7 @@ import RegisterPage from "./pages/RegisterPage";
 import TherapistListPage from "./pages/TherapistListPage";
 import TherapistDetailPage from "./pages/TherapistDetailPage";
 import DashboardPage from "./pages/DashboardPage";
-import TherapistProfileEditPage from "./pages/TherapistProfileEditPage";
+import ProfileEditPage from "./pages/ProfileEditPage";
 import SubscriptionPage from "./pages/SubscriptionPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
@@ -24,15 +24,9 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <Router>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            minHeight: "100vh",
-          }}
-        >
+        <div className="flex flex-col min-h-screen bg-gray-50">
           <Navbar />
-          <main style={{ flexGrow: 1, padding: "20px" }}>
+          <main className="flex-grow container mx-auto px-4 py-8">
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<HomePage />} />
@@ -56,15 +50,15 @@ const App: React.FC = () => {
               <Route
                 path="/profile/edit"
                 element={
-                  <ProtectedRoute requiredRole="therapist">
-                    <TherapistProfileEditPage />
+                  <ProtectedRoute>
+                    <ProfileEditPage />
                   </ProtectedRoute>
                 }
               />
               <Route
                 path="/subscription"
                 element={
-                  <ProtectedRoute requiredRole="therapist">
+                  <ProtectedRoute requiredRole="THERAPIST">
                     <SubscriptionPage />
                   </ProtectedRoute>
                 }

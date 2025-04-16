@@ -9,7 +9,7 @@ interface RegisterFormData {
   firstName: string;
   lastName: string;
   inviteCode: string;
-  role: "user" | "therapist";
+  role: "CLIENT" | "THERAPIST";
 }
 
 const RegisterPage: React.FC = () => {
@@ -22,7 +22,7 @@ const RegisterPage: React.FC = () => {
     firstName: "",
     lastName: "",
     inviteCode: "",
-    role: "user",
+    role: "CLIENT",
   });
   const [error, setError] = useState<string>("");
 
@@ -40,14 +40,15 @@ const RegisterPage: React.FC = () => {
         email: formData.email,
         password: formData.password,
         password_confirm: formData.confirmPassword,
-        ...(formData.role === "therapist" && {
+        role: formData.role,
+        ...(formData.role === "THERAPIST" && {
           invite_code: formData.inviteCode,
         }),
       };
 
       console.log("Отправка данных регистрации:", apiData);
 
-      const success = await register(apiData, formData.role);
+      const success = await register(apiData);
       if (success) {
         navigate("/dashboard");
       } else {
@@ -168,11 +169,11 @@ const RegisterPage: React.FC = () => {
                     value={formData.role}
                     onChange={handleChange}
                   >
-                    <option value="user">Пользователь</option>
-                    <option value="therapist">Психолог</option>
+                    <option value="CLIENT">Пользователь</option>
+                    <option value="THERAPIST">Психолог</option>
                   </select>
                 </div>
-                {formData.role === "therapist" && (
+                {formData.role === "THERAPIST" && (
                   <div className="mb-3">
                     <label htmlFor="inviteCode" className="form-label">
                       Код приглашения

@@ -1,145 +1,129 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useAuth } from "../contexts/AuthContext";
-
-interface Appointment {
-  id: string;
-  therapistName: string;
-  date: string;
-  time: string;
-  status: "pending" | "confirmed" | "completed" | "cancelled";
-}
-
-interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  appointments: Appointment[];
-}
+import { Link } from "react-router-dom";
+import { FullUserData } from "../types/user";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
 const UserCabinetPage: React.FC = () => {
-  const { user } = useAuth();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>("");
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        // Здесь будет API-запрос
-        const response = await fetch("/api/user/profile");
-        const data = await response.json();
-        setProfile(data);
-      } catch (err) {
-        setError(
-          `Ошибка при загрузке профиля: ${
-            err instanceof Error ? err.message : "Неизвестная ошибка"
-          }`
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, []);
+  const { user, loading } = useAuth();
+  const typedUser = user as FullUserData | null;
 
   if (loading) {
     return (
-      <div className="container text-center">
-        <div className="spinner-border" role="status">
-          <span className="visually-hidden">Загрузка...</span>
-        </div>
+      <div className="flex justify-center items-center h-64">
+        <LoadingSpinner />
       </div>
     );
   }
 
-  if (error || !profile) {
+  if (!typedUser) {
     return (
-      <div className="container">
-        <div className="alert alert-danger" role="alert">
-          {error || "Профиль не найден"}
-        </div>
+      <div className="text-center py-8">
+        <p className="text-red-600">
+          Пожалуйста, войдите в систему для просмотра личного кабинета.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="container">
-      <div className="row">
-        <div className="col-md-4">
-          <div className="card">
-            <div className="card-body">
-              <h3 className="card-title">Профиль</h3>
-              <div className="mb-3">
-                <strong>Имя:</strong> {profile.name}
-              </div>
-              <div className="mb-3">
-                <strong>Email:</strong> {profile.email}
-              </div>
-              <div className="mb-3">
-                <strong>Телефон:</strong> {profile.phone}
-              </div>
-              <button className="btn btn-primary">Редактировать профиль</button>
-            </div>
+    <div className="container mx-auto px-4 py-8 max-w-3xl">
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">
+        Личный кабинет клиента
+      </h1>
+
+      {/* Основная информация */}
+      <div className="bg-white shadow-lg rounded-lg p-6 mb-6">
+        <div className="flex items-center mb-6">
+          <img
+            src={
+              typedUser.profile?.profile_picture_url || "/default-avatar.png"
+            }
+            alt={`${typedUser.first_name} ${typedUser.last_name}`}
+            className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+            onError={(e) => (e.currentTarget.src = "/default-avatar.png")}
+          />
+          <div className="ml-4">
+            <h2 className="text-xl font-semibold text-gray-700">
+              Добро пожаловать, {typedUser.first_name}!
+            </h2>
+            <p className="text-gray-500">{typedUser.email}</p>
           </div>
         </div>
-        <div className="col-md-8">
-          <div className="card">
-            <div className="card-body">
-              <h3 className="card-title">Мои записи</h3>
-              <div className="table-responsive">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Психолог</th>
-                      <th>Дата</th>
-                      <th>Время</th>
-                      <th>Статус</th>
-                      <th>Действия</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {profile.appointments.map((appointment) => (
-                      <tr key={appointment.id}>
-                        <td>{appointment.therapistName}</td>
-                        <td>{appointment.date}</td>
-                        <td>{appointment.time}</td>
-                        <td>
-                          <span
-                            className={`badge ${
-                              appointment.status === "confirmed"
-                                ? "bg-success"
-                                : appointment.status === "pending"
-                                ? "bg-warning"
-                                : appointment.status === "completed"
-                                ? "bg-info"
-                                : "bg-danger"
-                            }`}
-                          >
-                            {appointment.status === "confirmed"
-                              ? "Подтверждено"
-                              : appointment.status === "pending"
-                              ? "Ожидает подтверждения"
-                              : appointment.status === "completed"
-                              ? "Завершено"
-                              : "Отменено"}
-                          </span>
-                        </td>
-                        <td>
-                          {appointment.status === "pending" && (
-                            <button className="btn btn-sm btn-danger">
-                              Отменить
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+
+        <div className="space-y-4">
+          {typedUser.profile?.gender_code &&
+            typedUser.profile.gender_code !== "UNKNOWN" && (
+              <div className="flex items-center">
+                <span className="text-gray-600 w-24">Пол:</span>
+                <span className="text-gray-800">
+                  {typedUser.profile.gender}
+                </span>
               </div>
+            )}
+
+          {typedUser.client_profile?.request_details && (
+            <div>
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                Ваш запрос
+              </h3>
+              <p className="text-gray-600 bg-gray-50 p-4 rounded-lg">
+                {typedUser.client_profile.request_details}
+              </p>
             </div>
-          </div>
+          )}
+
+          {typedUser.client_profile?.interested_topics &&
+            typedUser.client_profile.interested_topics.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                  Интересующие темы
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {typedUser.client_profile.interested_topics.map((topic) => (
+                    <span
+                      key={topic.id}
+                      className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
+                    >
+                      {topic.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+        </div>
+      </div>
+
+      {/* Быстрые действия */}
+      <div className="bg-white shadow-lg rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-700 mb-4">
+          Быстрые действия
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Link
+            to="/profile/edit"
+            className="flex items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <span className="text-blue-600">Редактировать профиль</span>
+          </Link>
+          <Link
+            to="/therapists"
+            className="flex items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <span className="text-blue-600">Найти специалиста</span>
+          </Link>
+          <Link
+            to="/saved-searches"
+            className="flex items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <span className="text-blue-600">Сохраненные поиски</span>
+          </Link>
+          <Link
+            to="/appointments"
+            className="flex items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <span className="text-blue-600">Мои записи</span>
+          </Link>
         </div>
       </div>
     </div>
