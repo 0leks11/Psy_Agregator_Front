@@ -18,7 +18,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   register: (userData: {
     email: string;
@@ -80,7 +80,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     setUser(userData);
   };
 
-  const login = async (email: string, password: string): Promise<void> => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
       const data = await loginUser({ email, password });
       if (data && data.token && data.user) {
@@ -88,10 +88,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         setToken(data.token);
         setUser(data.user);
         console.log("AuthProvider: Успешный вход", data.user);
+        return true;
       }
+      return false;
     } catch (error) {
       console.error("AuthProvider: Ошибка входа", error);
       setError("Ошибка входа");
+      return false;
     }
   };
 

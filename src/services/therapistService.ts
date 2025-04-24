@@ -9,7 +9,9 @@ import {
 import api from "./api";
 
 export const getTherapists = async (): Promise<TherapistProfileReadData[]> => {
-  const response = await api.get<TherapistProfileReadData[]>("/therapists/");
+  const response = await api.get<TherapistProfileReadData[]>(
+    "/api/therapists/"
+  );
   return response.data;
 };
 
@@ -17,7 +19,7 @@ export const getTherapistById = async (
   id: number
 ): Promise<TherapistProfileReadData> => {
   const response = await api.get<TherapistProfileReadData>(
-    `/therapists/${id}/`
+    `/api/therapists/${id}/`
   );
   return response.data;
 };
@@ -27,7 +29,7 @@ export const getPublicTherapistProfile = async (
   id: number
 ): Promise<TherapistPublicData> => {
   try {
-    const response = await api.get(`/therapists/${id}/`);
+    const response = await api.get(`/api/therapists/${id}/`);
     return response.data;
   } catch (error) {
     console.error(
@@ -43,7 +45,7 @@ export const getTherapistPublications = async (
 ): Promise<PublicationData[]> => {
   try {
     const response = await api.get(
-      `/therapists/${therapistProfileId}/publications/`
+      `/api/therapists/${therapistProfileId}/publications/`
     );
     // Обработка пагинации, если бэкенд ее использует
     if (response.data && Array.isArray(response.data.results)) {
@@ -73,7 +75,7 @@ export const getTherapistPhotos = async (
   therapistId: number
 ): Promise<TherapistPhotoData[]> => {
   const response = await api.get<TherapistPhotoData[]>(
-    `/therapists/${therapistId}/photos/`
+    `/api/therapists/${therapistId}/photos/`
   );
   return response.data;
 };
@@ -85,7 +87,7 @@ export const uploadTherapistPhoto = async (
   const formData = new FormData();
   formData.append("image", photo);
   const response = await api.post<TherapistPhotoData>(
-    `/therapists/${therapistId}/photos/`,
+    `/api/therapists/${therapistId}/photos/`,
     formData,
     {
       headers: {
@@ -100,7 +102,7 @@ export const deleteTherapistPhoto = async (
   therapistId: number,
   photoId: number
 ): Promise<void> => {
-  await api.delete(`/therapists/${therapistId}/photos/${photoId}/`);
+  await api.delete(`/api/therapists/${therapistId}/photos/${photoId}/`);
 };
 
 export const updateTherapistPhoto = async (
@@ -111,7 +113,7 @@ export const updateTherapistPhoto = async (
   const formData = new FormData();
   formData.append("image", photo);
   const response = await api.patch<TherapistPhotoData>(
-    `/therapists/${therapistId}/photos/${photoId}/`,
+    `/api/therapists/${therapistId}/photos/${photoId}/`,
     formData,
     {
       headers: {
@@ -141,7 +143,7 @@ export const getPublications = async (
     results: PublicationData[];
     count: number;
     total_pages: number;
-  }>("/publications/", { params });
+  }>("/api/publications/", { params });
 
   return {
     data: response.data.results,
@@ -153,7 +155,7 @@ export const getPublications = async (
 export const getPublicationById = async (
   id: number
 ): Promise<PublicationData> => {
-  const response = await api.get<PublicationData>(`/publications/${id}/`);
+  const response = await api.get<PublicationData>(`/api/publications/${id}/`);
   return response.data;
 };
 
@@ -172,11 +174,15 @@ export const createPublication = async (
     formData.append("is_published", publicationData.is_published.toString());
   }
 
-  const response = await api.post<PublicationData>("/publications/", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  const response = await api.post<PublicationData>(
+    "/api/publications/",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
 
   return response.data;
 };
@@ -210,7 +216,7 @@ export const updatePublication = async (
   }
 
   const response = await api.patch<PublicationData>(
-    `/publications/${id}/`,
+    `/api/publications/${id}/`,
     formData,
     {
       headers: {
@@ -223,7 +229,7 @@ export const updatePublication = async (
 };
 
 export const deletePublication = async (id: number): Promise<void> => {
-  await api.delete(`/publications/${id}/`);
+  await api.delete(`/api/publications/${id}/`);
 };
 
 export const createTherapistPublication = async (
@@ -231,7 +237,7 @@ export const createTherapistPublication = async (
   data: { title: string; content: string }
 ): Promise<PublicationData> => {
   const response = await api.post<PublicationData>(
-    `/therapists/${therapistId}/publications/`,
+    `/api/therapists/${therapistId}/publications/`,
     data
   );
   return response.data;
@@ -243,7 +249,7 @@ export const updateTherapistPublication = async (
   data: { title: string; content: string }
 ): Promise<PublicationData> => {
   const response = await api.patch<PublicationData>(
-    `/therapists/${therapistId}/publications/${publicationId}/`,
+    `/api/therapists/${therapistId}/publications/${publicationId}/`,
     data
   );
   return response.data;
@@ -253,5 +259,7 @@ export const deleteTherapistPublication = async (
   therapistId: number,
   publicationId: number
 ): Promise<void> => {
-  await api.delete(`/therapists/${therapistId}/publications/${publicationId}/`);
+  await api.delete(
+    `/api/therapists/${therapistId}/publications/${publicationId}/`
+  );
 };

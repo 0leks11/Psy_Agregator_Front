@@ -10,7 +10,7 @@ import {
 } from "../types/models";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ErrorMessage from "../components/common/ErrorMessage";
-import PhotoGallery from "../components/therapists/PhotoGallery";
+import PhotoGallery from "../components/therapistList/PhotoGallery";
 
 const TherapistDetailPage: React.FC = () => {
   const { therapistId } = useParams<{ therapistId: string }>();

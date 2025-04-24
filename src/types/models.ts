@@ -112,3 +112,37 @@ export interface FullUserData extends BaseUserData {
   therapist_profile?: TherapistProfilePrivateData; // Используем приватные данные для ЛК
   client_profile?: ClientProfileData; // Или ClientProfileReadData
 }
+
+// Полное определение публикации
+export interface Publication {
+  id: number | string; // Может быть числом или UUID
+  title: string;
+  content: string;
+  created_at: string; // Дата в виде строки ISO
+  updated_at?: string;
+  author_id?: number; // ID автора
+  author?: string | BaseUserData; // Имя автора или объект с данными
+  featured_image?: string | null; // URL картинки
+  is_published?: boolean;
+}
+
+// Общий интерфейс для пропсов в секциях профиля
+export interface ProfileSectionProps {
+  userData: FullUserData;
+  isEditable: boolean;
+}
+
+// Интерфейс для пропсов PublicationForm
+export interface PublicationFormProps {
+  onPostSaved: (newPost: Publication) => void;
+  onCancel: () => void;
+  initialData?: Partial<Publication>; // Для редактирования существующих
+}
+
+// Интерфейс для пропсов PublicationItem
+export interface PublicationItemProps {
+  publication: Publication;
+  isEditable: boolean;
+  onPostDeleted?: (id: number | string) => void;
+  onPostUpdated?: (post: Publication) => void;
+}

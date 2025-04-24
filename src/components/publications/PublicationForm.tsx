@@ -1,215 +1,112 @@
+// src/components/publications/PublicationForm.tsx
 import React, { useState, useEffect } from "react";
+import { Publication } from "../../types/models"; // Импорт типа
 import {
-  PublicationData,
-  PublicationCreateUpdateData,
-} from "../../types/types";
-import LoadingSpinner from "../common/LoadingSpinner";
+  addPublication,
+  updatePublication,
+} from "../../services/publicationService"; // Импорт API функций
+import EditControls from "../common/EditControls"; // Используем общие кнопки
 import ErrorMessage from "../common/ErrorMessage";
+import LoadingSpinner from "../common/LoadingSpinner"; // Импорт спиннера
 
 interface PublicationFormProps {
-  initialData?: Partial<PublicationData>;
-  onSubmit: (data: PublicationCreateUpdateData) => Promise<void>;
-  loading?: boolean;
-  error?: string | null;
+  existingPublication?: Publication; // Для режима редактирования
+  onPostSaved: (post: Publication) => void; // Колбэк при успехе
+  onCancel: () => void; // Колбэк для отмены/закрытия
+  isEditing?: boolean; // Флаг режима
 }
 
 const PublicationForm: React.FC<PublicationFormProps> = ({
-  initialData,
-  onSubmit,
-  loading = false,
-  error = null,
+  existingPublication,
+  onPostSaved,
+  onCancel,
+  isEditing = false,
 }) => {
-  const [title, setTitle] = useState(initialData?.title || "");
-  const [content, setContent] = useState(initialData?.content || "");
-  const [image, setImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(
-    initialData?.featured_image || null
-  );
-  const [isPublished, setIsPublished] = useState(
-    initialData?.is_published !== false
-  );
-  const [localError, setLocalError] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (initialData) {
-      setTitle(initialData.title || "");
-      setContent(initialData.content || "");
-      setImagePreview(initialData.featured_image || null);
-      setIsPublished(initialData.is_published !== false);
+    if (isEditing && existingPublication) {
+      setTitle(existingPublication.title || "");
+      setContent(existingPublication.content || "");
+    } else {
+      // Сброс для новой публикации
+      setTitle("");
+      setContent("");
     }
-  }, [initialData]);
+  }, [isEditing, existingPublication]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      if (file.size > 2 * 1024 * 1024) {
-        setLocalError("Размер изображения не должен превышать 2МБ");
-        return;
-      }
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    setError(null);
 
-      setImage(file);
-      setLocalError(null);
-
-      // Показать предпросмотр
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeImage = () => {
-    setImage(null);
-    setImagePreview(null);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLocalError(null);
-
-    if (!title.trim()) {
-      setLocalError("Заголовок обязателен");
-      return;
-    }
-
+    // Простая валидация
     if (!content.trim()) {
-      setLocalError("Содержание публикации обязательно");
+      setError("Содержание публикации не может быть пустым.");
+      setIsLoading(false);
       return;
     }
 
-    const data: PublicationCreateUpdateData = {
-      title: title.trim(),
-      content: content.trim(),
-      is_published: isPublished,
-    };
-
-    if (image) {
-      data.featured_image = image;
-    } else if (initialData?.featured_image && imagePreview === null) {
-      // Если было изображение, а теперь его удалили
-      data.featured_image = null;
-    }
+    const publicationData = { title, content };
 
     try {
-      await onSubmit(data);
+      let savedPost: Publication;
+      if (isEditing && existingPublication) {
+        // Режим редактирования
+        savedPost = await updatePublication(
+          existingPublication.id,
+          publicationData
+        );
+      } else {
+        // Режим добавления
+        savedPost = await addPublication(publicationData);
+      }
+      onPostSaved(savedPost); // Вызываем колбэк с результатом
+      // Сброс формы не нужен здесь, т.к. компонент либо скроется, либо обновится
     } catch (err: any) {
-      setLocalError(err.message || "Ошибка при сохранении публикации");
+      console.error("Error saving publication:", err);
+      const errMsg =
+        err.response?.data?.detail ||
+        err.message ||
+        "Не удалось сохранить публикацию.";
+      setError(errMsg);
+      // Не вызываем onCancel при ошибке, чтобы пользователь мог исправить
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {(error || localError) && (
-        <ErrorMessage message={error || localError || ""} />
+    <div className="space-y-4">
+      {isEditing && !existingPublication && (
+        <ErrorMessage message="Ошибка: нет данных для редактирования." />
       )}
-
-      <div>
-        <label
-          htmlFor="title"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Заголовок <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          disabled={loading}
-          required
-          className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Заголовок публикации"
-        />
-      </div>
-
-      <div>
-        <label
-          htmlFor="content"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Содержание <span className="text-red-500">*</span>
-        </label>
-        <textarea
-          id="content"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows={12}
-          disabled={loading}
-          required
-          className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Расскажите о своем методе, поделитесь советами или опытом..."
-        ></textarea>
-        <p className="text-xs text-gray-500 mt-1">
-          Для форматирования можно использовать переносы строк.
-        </p>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Изображение для публикации (опционально)
-        </label>
-        <div className="space-y-2">
-          {imagePreview ? (
-            <div className="relative">
-              <img
-                src={imagePreview}
-                alt="Предпросмотр"
-                className="max-h-60 rounded-md"
-              />
-              <button
-                type="button"
-                onClick={removeImage}
-                className="absolute top-2 right-2 bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-70 hover:opacity-100"
-              >
-                &times;
-              </button>
-            </div>
-          ) : (
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              disabled={loading}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-            />
-          )}
-        </div>
-      </div>
-
-      <div className="flex items-center">
-        <input
-          type="checkbox"
-          id="isPublished"
-          checked={isPublished}
-          onChange={(e) => setIsPublished(e.target.checked)}
-          disabled={loading}
-          className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-        />
-        <label
-          htmlFor="isPublished"
-          className="ml-2 block text-sm text-gray-900"
-        >
-          Опубликовать сразу
-        </label>
-      </div>
-
-      <div className="flex justify-end">
-        <button
-          type="submit"
-          disabled={loading}
-          className="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? (
-            <LoadingSpinner size="sm" />
-          ) : initialData ? (
-            "Сохранить изменения"
-          ) : (
-            "Создать публикацию"
-          )}
-        </button>
-      </div>
-    </form>
+      <input
+        type="text"
+        placeholder="Заголовок (необязательно)"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        disabled={isLoading}
+        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
+      />
+      <textarea
+        placeholder="Напишите что-нибудь..."
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        disabled={isLoading}
+        rows={isEditing ? 8 : 4} // Больше места при редактировании
+        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out min-h-[100px]"
+      />
+      {error && <ErrorMessage message={error} />}
+      <EditControls
+        isLoading={isLoading}
+        onCancel={onCancel} // Используем переданный onCancel
+        onSave={handleSubmit}
+        saveText={isEditing ? "Сохранить изменения" : "Опубликовать"}
+      />
+    </div>
   );
 };
 

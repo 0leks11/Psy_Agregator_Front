@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { getTherapists } from "../services/therapistService";
-import { TherapistProfileReadData } from "../types/user";
+import { getTherapists } from "../../services/therapistService";
+import { TherapistProfileReadData } from "../../types/user";
 
 const TherapistListPage: React.FC = () => {
   const [therapists, setTherapists] = useState<TherapistProfileReadData[]>([]);

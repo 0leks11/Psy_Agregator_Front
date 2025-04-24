@@ -1,6 +1,6 @@
 import React, { useState, FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface LoginFormData {
   email: string;
@@ -9,6 +9,7 @@ interface LoginFormData {
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -19,9 +20,16 @@ const LoginPage: React.FC = () => {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      await login(formData.email, formData.password);
-      navigate("/dashboard");
+      const success = await login(formData.email, formData.password);
+      if (success) {
+        const from = location.state?.from?.pathname || "/my-profile";
+        console.log("Navigating to:", from);
+        navigate(from, { replace: true });
+      } else {
+        setError("Не удалось войти. Проверьте учетные данные.");
+      }
     } catch (err) {
+      console.error("Login Page Submit Error:", err);
       setError("Неверный email или пароль");
     }
   };

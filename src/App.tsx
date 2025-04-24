@@ -5,17 +5,17 @@ import { AuthProvider } from "./contexts/AuthContext";
 // Layout
 import Navbar from "./components/layout/Navbar";
 import Footer from "./components/layout/Footer";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Pages
 import HomePage from "./pages/HomePage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import TherapistListPage from "./pages/TherapistListPage";
-import TherapistDetailPage from "./pages/TherapistDetailPage";
-import PublicTherapistProfilePage from "./pages/PublicTherapistProfilePage";
-import DashboardPage from "./pages/DashboardPage";
-import MyProfileEditPage from "./pages/MyProfileEditPage";
-import SubscriptionPage from "./pages/SubscriptionPage";
+import LoginPage from "./pages/authentication/LoginPage";
+import RegisterPage from "./pages/authentication/RegisterPage";
+import TherapistListPage from "./pages/therapists/TherapistListPage";
+import UserProfilePage from "./pages/therapists/UserProfilePage";
+import MyProfilePage from "./pages/account/MyProfilePage";
+import SubscriptionPage from "./pages/account/SubscriptionPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 // Protected Route Component
@@ -34,29 +34,18 @@ const App: React.FC = () => {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/therapists" element={<TherapistListPage />} />
-              <Route
-                path="/therapists/:therapistId"
-                element={<TherapistDetailPage />}
-              />
+              <Route path="/users/:userId" element={<UserProfilePage />} />
               <Route
                 path="/therapist/:therapistProfileId"
-                element={<PublicTherapistProfilePage />}
+                element={<UserProfilePage />}
               />
 
               {/* Protected Routes */}
               <Route
-                path="/dashboard"
+                path="/my-profile"
                 element={
                   <ProtectedRoute>
-                    <DashboardPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/profile/edit"
-                element={
-                  <ProtectedRoute>
-                    <MyProfileEditPage />
+                    <MyProfilePage />
                   </ProtectedRoute>
                 }
               />
@@ -74,6 +63,7 @@ const App: React.FC = () => {
             </Routes>
           </main>
           <Footer />
+          <ToastContainer position="bottom-right" autoClose={3000} />
         </div>
       </Router>
     </AuthProvider>
