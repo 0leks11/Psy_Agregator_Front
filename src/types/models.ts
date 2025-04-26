@@ -21,6 +21,7 @@ export interface UserProfileData {
 
 export interface BaseUserData {
   id: number;
+  public_id: string;
   first_name: string | null;
   last_name: string | null;
 }
@@ -145,4 +146,26 @@ export interface PublicationItemProps {
   isEditable: boolean;
   onPostDeleted?: (id: number | string) => void;
   onPostUpdated?: (post: Publication) => void;
+}
+
+// Интерфейсы для карточек терапевтов
+export interface ApiProfileCardData {
+  profile_picture_url: string | null;
+}
+
+export interface ApiTherapistProfileCardData {
+  about: string | null;
+  experience_years: number;
+  is_verified: boolean;
+  skills: Array<{ id: number; name: string }>; // Массив объектов
+  skills_count: number; // Общее количество
+}
+
+export interface ApiTherapistListData {
+  id: number; // User ID
+  public_id: string;
+  first_name: string;
+  last_name: string;
+  profile: ApiProfileCardData | null;
+  therapist_profile: ApiTherapistProfileCardData | null;
 }

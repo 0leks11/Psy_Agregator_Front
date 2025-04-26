@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { getPublicTherapistProfile } from "../../services/therapistService";
-import { TherapistPublicData } from "../../types/types";
+import { getPublicUserProfile } from "../../services/profileService";
+import { PublicProfileData } from "../../types/api";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import ErrorMessage from "../../components/common/ErrorMessage";
 
@@ -10,18 +10,15 @@ import ProfileHeaderSection from "../../components/profileSections/identity/Prof
 import ProfileAboutSection from "../../components/profileSections/content/ProfileAboutSection";
 import ProfileSkillsSection from "../../components/profileSections/tags/ProfileSkillsSection";
 import ProfileLanguagesSection from "../../components/profileSections/tags/ProfileLanguagesSection";
-import ProfileExperienceHoursSection from "../../components/profileSections/details/ProfileExperienceHoursSection";
-import ProfileSocialLinksSection from "../../components/profileSections/details/ProfileSocialLinksSection";
-import TherapistPhotoGallery from "../../components/profileSections/gallery/ProfilePhotoGallerySection";
+import ProfileStatusSection from "../../components/profileSections/details/ProfileSubscriptionStatusSection";
 import ProfileVideoSection from "../../components/profileSections/content/ProfileVideoSection";
+import ProfilePublicationsListSection from "../../components/profileSections/publications/ProfilePublicationsSection";
+import ProfilePhotoGalleryViewSection from "../../components/profileSections/gallery/ProfilePhotoGallerySection";
 
 const UserProfilePage: React.FC = () => {
-  // Поддерживаем оба параметра: userId и therapistProfileId для обратной совместимости
-  const { userId, therapistProfileId } = useParams<{
-    userId?: string;
-    therapistProfileId?: string;
-  }>();
-  const [profileData, setProfileData] = useState<TherapistPublicData | null>(
+  const { userId } = useParams<{ userId: string }>();
+  console.log("UserProfilePage - Extracted userId:", userId);
+  const [profileData, setProfileData] = useState<PublicProfileData | null>(
     null
   );
   const [loading, setLoading] = useState(true);
@@ -29,11 +26,9 @@ const UserProfilePage: React.FC = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      // Используем userId, если он есть, иначе используем therapistProfileId
-      const profileId = userId || therapistProfileId;
-
-      if (!profileId) {
+      if (!userId) {
         setError("ID профиля не указан.");
+        console.error("UserProfilePage - userId is missing!");
         setLoading(false);
         return;
       }
@@ -41,22 +36,31 @@ const UserProfilePage: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const id = parseInt(profileId);
-        if (isNaN(id)) {
-          throw new Error("Некорректный ID профиля");
-        }
-        const data = await getPublicTherapistProfile(id);
+        console.log(
+          "UserProfilePage - Attempting to fetch profile for ID:",
+          userId
+        );
+        const data = await getPublicUserProfile(userId);
+        console.log("UserProfilePage - Fetched profile data:", data);
         setProfileData(data);
-      } catch (err: any) {
+      } catch (err) {
         console.error("Ошибка при загрузке профиля:", err);
-        setError(err.response?.data?.detail || "Не удалось загрузить профиль.");
+        if (err instanceof Error) {
+          if (err.message.includes("404") || err.message.includes("403")) {
+            setError("Профиль не найден или недоступен.");
+          } else {
+            setError("Не удалось загрузить профиль.");
+          }
+        } else {
+          setError("Не удалось загрузить профиль.");
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchProfile();
-  }, [userId, therapistProfileId]);
+  }, [userId]);
 
   if (loading) {
     return (
@@ -82,42 +86,85 @@ const UserProfilePage: React.FC = () => {
     );
   }
 
-  // Преобразуем данные из TherapistPublicData в формат, который ожидают компоненты
-  const userData = {
-    id: profileData.id,
-    first_name: profileData.user.first_name,
-    last_name: profileData.user.last_name,
-    email: "", // Публичный профиль не содержит email
-    profile: profileData.profile,
+  // Создаем адаптированные данные для совместимости с компонентами
+  const userDataForSections = {
+    id: 0,
+    public_id: profileData.public_id,
+    first_name: profileData.first_name,
+    last_name: profileData.last_name,
+    email: "",
+    profile: {
+      role: "THERAPIST" as const,
+      gender: "UNKNOWN" as const,
+      gender_display: "",
+      profile_picture_url: profileData.profile_picture_url,
+      pronouns: profileData.pronouns,
+    },
     therapist_profile: {
-      ...profileData,
-      user_profile: profileData.profile.id,
+      id: 0,
+      about: profileData.about,
+      experience_years: 0,
+      is_verified: true,
+      is_subscribed: true,
+      skills: profileData.skills,
+      languages: profileData.languages,
+      total_hours_worked: null,
+      display_hours: false,
+      office_location: null,
+      status: profileData.status,
+      status_display: profileData.status_display,
+      short_video_url: profileData.short_video_url,
+      photos: profileData.photos.map((url) => ({
+        id: 0,
+        image: url,
+        caption: "",
+        order: 0,
+      })),
     },
     client_profile: null,
+    publications: profileData.publications,
   };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="space-y-8">
-        {/* Используем те же самые компоненты секций, но с isEditable=false */}
-        <ProfileHeaderSection userData={userData} isEditable={false} />
+        <ProfileHeaderSection
+          userData={userDataForSections}
+          isEditable={false}
+        />
+        <ProfileAboutSection
+          userData={userDataForSections}
+          isEditable={false}
+        />
+        <ProfileSkillsSection
+          userData={userDataForSections}
+          isEditable={false}
+        />
+        <ProfileLanguagesSection
+          userData={userDataForSections}
+          isEditable={false}
+        />
+        <ProfileStatusSection
+          userData={userDataForSections}
+          isEditable={false}
+        />
 
-        <ProfileAboutSection userData={userData} isEditable={false} />
-
-        <ProfileSkillsSection userData={userData} isEditable={false} />
-
-        <ProfileLanguagesSection userData={userData} isEditable={false} />
-
-        <ProfileExperienceHoursSection userData={userData} isEditable={false} />
-
-        <ProfileSocialLinksSection userData={userData} isEditable={false} />
-
-        {profileData.photos && profileData.photos.length > 0 && (
-          <TherapistPhotoGallery photos={profileData.photos} />
+        {profileData.short_video_url && (
+          <ProfileVideoSection videoUrl={profileData.short_video_url} />
         )}
 
-        {profileData.video_intro_url && (
-          <ProfileVideoSection videoUrl={profileData.video_intro_url} />
+        {profileData.publications && profileData.publications.length > 0 && (
+          <ProfilePublicationsListSection
+            userData={userDataForSections}
+            isEditable={false}
+          />
+        )}
+
+        {profileData.photos && profileData.photos.length > 0 && (
+          <ProfilePhotoGalleryViewSection
+            userData={userDataForSections}
+            isEditable={false}
+          />
         )}
       </div>
     </div>

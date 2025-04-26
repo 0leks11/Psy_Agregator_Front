@@ -7,7 +7,11 @@ import React, {
   ReactNode,
 } from "react";
 import api from "../services/api"; // Your configured axios instance
-import { loginUser, registerUser } from "../services/authService";
+import {
+  loginUser,
+  registerClient,
+  registerTherapist,
+} from "../services/authService";
 import { getMyProfile } from "../services/profileService";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import { FullUserData } from "../types/user";
@@ -113,7 +117,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     invite_code?: string;
   }): Promise<boolean> => {
     try {
-      const data = await registerUser(userData);
+      let data;
+      if (userData.role === "THERAPIST") {
+        if (!userData.invite_code) {
+          throw new Error("Invite code is required for therapist registration");
+        }
+        data = await registerTherapist(userData);
+      } else {
+        data = await registerClient(userData);
+      }
+
       if (data && data.token && data.user) {
         localStorage.setItem("authToken", data.token);
         setToken(data.token);

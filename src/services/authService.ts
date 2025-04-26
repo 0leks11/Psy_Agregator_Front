@@ -6,6 +6,14 @@ interface LoginResponse {
   user: FullUserData;
 }
 
+interface RegisterCredentials {
+  email: string;
+  password: string;
+  first_name: string;
+  last_name: string;
+  invite_code?: string;
+}
+
 export const loginUser = async (credentials: {
   email: string;
   password: string;
@@ -17,16 +25,24 @@ export const loginUser = async (credentials: {
   return response.data;
 };
 
-export const registerUser = async (userData: {
-  email: string;
-  password: string;
-  first_name: string;
-  last_name: string;
-  role: "CLIENT" | "THERAPIST";
-  invite_code?: string;
-}): Promise<LoginResponse> => {
+export const registerClient = async (
+  userData: RegisterCredentials
+): Promise<LoginResponse> => {
   const response = await api.post<LoginResponse>(
-    "/api/auth/register/",
+    "/api/auth/register/client/",
+    userData
+  );
+  return response.data;
+};
+
+export const registerTherapist = async (
+  userData: RegisterCredentials
+): Promise<LoginResponse> => {
+  if (!userData.invite_code) {
+    throw new Error("Invite code is required for therapist registration");
+  }
+  const response = await api.post<LoginResponse>(
+    "/api/auth/register/therapist/",
     userData
   );
   return response.data;

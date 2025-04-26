@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 
@@ -22,6 +22,10 @@ import NotFoundPage from "./pages/NotFoundPage";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 
 const App: React.FC = () => {
+  useEffect(() => {
+    console.log("Rendering Routes...");
+  }, []);
+
   return (
     <AuthProvider>
       <Router>
@@ -35,10 +39,6 @@ const App: React.FC = () => {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/therapists" element={<TherapistListPage />} />
               <Route path="/users/:userId" element={<UserProfilePage />} />
-              <Route
-                path="/therapist/:therapistProfileId"
-                element={<UserProfilePage />}
-              />
 
               {/* Protected Routes */}
               <Route

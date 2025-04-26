@@ -50,3 +50,62 @@ export interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRole?: "CLIENT" | "THERAPIST";
 }
+
+// Новые типы для публичного API
+export interface SimplePublication {
+  id: string; // UUID
+  title?: string | null;
+  created_at: string;
+  // content_snippet?: string; // Если добавили на бэке
+}
+
+export interface PublicProfileData {
+  public_id: string;
+  first_name: string;
+  last_name: string;
+  pronouns: string | null;
+  profile_picture_url: string | null;
+  about: string | null;
+  skills: Array<{ id: number; name: string }>;
+  languages: Array<{ id: number; name: string }>;
+  short_video_url: string | null;
+  status: string | null;
+  status_display: string | null;
+  publications: SimplePublication[];
+  photos: string[];
+  experience_years: number;
+  is_verified: boolean;
+  is_subscribed: boolean;
+}
+
+export interface ApiTherapistListData {
+  id: number;
+  public_id: string;
+  first_name: string;
+  last_name: string;
+  profile: {
+    profile_picture_url: string | null;
+    gender: string;
+    gender_display: string;
+    pronouns: string | null;
+  };
+  therapist_profile: {
+    about: string | null;
+    experience_years: number;
+    is_verified: boolean;
+    is_subscribed: boolean;
+    skills: Array<{ id: number; name: string }>;
+    languages: Array<{ id: number; name: string }>;
+    status: string | null;
+    status_display: string | null;
+    video_intro_url: string | null;
+    website_url: string | null;
+    linkedin_url: string | null;
+    photos: Array<{
+      id: number;
+      image: string;
+      caption: string;
+      order: number;
+    }>;
+  };
+}

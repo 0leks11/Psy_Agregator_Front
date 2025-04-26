@@ -28,6 +28,8 @@ export interface TherapistProfileData {
   website_url: string | null;
   linkedin_url: string | null;
   photos: TherapistPhotoData[];
+  status: string | null;
+  status_display: string | null;
 }
 
 export interface ClientProfileData {
@@ -131,6 +133,7 @@ export interface ProtectedRouteProps {
 
 export interface BaseUserData {
   id: number;
+  public_id: string;
   first_name: string;
   last_name: string;
 }

@@ -3,28 +3,23 @@ import { PencilIcon } from "@heroicons/react/24/outline";
 
 interface ProfileWrapperProps {
   title: string;
-  children: ReactNode;
   isEditable: boolean;
-  isEditing: boolean; // Whether the content inside is currently in edit mode
-  onEditClick: () => void;
-  className?: string; // Allow passing additional classes
+  isEditing: boolean;
+  onEditClick?: () => void;
+  children: React.ReactNode;
 }
 
 const ProfileWrapper: React.FC<ProfileWrapperProps> = ({
   title,
-  children,
   isEditable,
   isEditing,
   onEditClick,
-  className = "",
+  children,
 }) => {
   return (
-    <div
-      className={`bg-white shadow rounded-lg p-6 mb-6 relative group ${className}`}
-    >
+    <div className="bg-white shadow-lg rounded-lg p-6">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
-        {/* Show edit button only if editable and not already editing */}
         {isEditable && !isEditing && (
           <button
             onClick={onEditClick}
@@ -35,7 +30,7 @@ const ProfileWrapper: React.FC<ProfileWrapperProps> = ({
           </button>
         )}
       </div>
-      <div>{children}</div>
+      {children}
     </div>
   );
 };

@@ -8,21 +8,26 @@ import {
   ClientProfileUpdateData,
 } from "../types/types";
 import { TherapistPhotoData, PublicationData } from "../types/models";
+import { PublicProfileData } from "../types/api";
+import { AxiosError } from "axios";
 
 export const getSkills = async (): Promise<SkillData[]> => {
-  const response = await api.get<SkillData[]>("/skills/");
+  const response = await api.get<SkillData[]>("/api/skills/");
   return response.data;
 };
 
 export const getLanguages = async (): Promise<LanguageData[]> => {
-  const response = await api.get<LanguageData[]>("/languages/");
+  const response = await api.get<LanguageData[]>("/api/languages/");
   return response.data;
 };
 
 export const updateBaseProfile = async (
   data: ProfileUpdateData
 ): Promise<FullUserData> => {
-  const response = await api.patch<FullUserData>("/profile/update/base/", data);
+  const response = await api.patch<FullUserData>(
+    "/api/profile/update/base/",
+    data
+  );
   return response.data;
 };
 
@@ -30,7 +35,7 @@ export const updateProfilePicture = async (
   formData: FormData
 ): Promise<FullUserData> => {
   const response = await api.patch<FullUserData>(
-    "/profile/update/picture/",
+    "/api/profile/update/picture/",
     formData,
     {
       headers: {
@@ -45,7 +50,7 @@ export const updateTherapistProfile = async (
   data: TherapistProfileUpdateData
 ): Promise<FullUserData> => {
   const response = await api.patch<FullUserData>(
-    "/profile/update/therapist/",
+    "/api/profile/update/therapist/",
     data
   );
   return response.data;
@@ -55,14 +60,14 @@ export const updateClientProfile = async (
   data: ClientProfileUpdateData
 ): Promise<FullUserData> => {
   const response = await api.patch<FullUserData>(
-    "/profile/update/client/",
+    "/api/profile/update/client/",
     data
   );
   return response.data;
 };
 
 export const getMyProfile = async (): Promise<FullUserData> => {
-  const response = await api.get<FullUserData>("/auth/user/");
+  const response = await api.get<FullUserData>("/api/auth/user/");
   return response.data;
 };
 
@@ -73,7 +78,7 @@ export const addMyPhoto = async (
   // formData должен содержать 'image' и опционально 'caption', 'order'
   try {
     const response = await api.post<TherapistPhotoData>(
-      "/profile/photos/",
+      "/api/profile/photos/",
       formData,
       {
         headers: { "Content-Type": "multipart/form-data" },
@@ -92,7 +97,7 @@ export const updateMyPhoto = async (
 ): Promise<TherapistPhotoData> => {
   try {
     const response = await api.patch<TherapistPhotoData>(
-      `/profile/photos/${photoId}/`,
+      `/api/profile/photos/${photoId}/`,
       data
     );
     return response.data;
@@ -107,7 +112,7 @@ export const updateMyPhoto = async (
 
 export const deleteMyPhoto = async (photoId: number): Promise<void> => {
   try {
-    await api.delete(`/profile/photos/${photoId}/`);
+    await api.delete(`/api/profile/photos/${photoId}/`);
   } catch (error: any) {
     console.error(
       `Delete photo ${photoId} error:`,
@@ -122,7 +127,7 @@ export const getMyPublications = async (): Promise<PublicationData[]> => {
   try {
     const response = await api.get<
       { results: PublicationData[] } | PublicationData[]
-    >("/profile/publications/");
+    >("/api/profile/publications/");
     // Проверяем, есть ли свойство results (пагинированный ответ) или сразу массив
     return "results" in response.data ? response.data.results : response.data;
   } catch (error: any) {
@@ -140,7 +145,7 @@ export const createMyPublication = async (
   // formData: title, content, is_published, featured_image (optional)
   try {
     const response = await api.post<PublicationData>(
-      "/profile/publications/",
+      "/api/profile/publications/",
       formData,
       {
         headers: { "Content-Type": "multipart/form-data" }, // Если есть картинка
@@ -164,7 +169,7 @@ export const updateMyPublication = async (
     // Используем POST с _method=PATCH если бэкенд не поддерживает PATCH для multipart
     // Или отправляем JSON если картинка не меняется
     const response = await api.patch<PublicationData>(
-      `/profile/publications/${pubId}/`,
+      `/api/profile/publications/${pubId}/`,
       formData,
       {
         headers: { "Content-Type": "multipart/form-data" },
@@ -182,11 +187,29 @@ export const updateMyPublication = async (
 
 export const deleteMyPublication = async (pubId: number): Promise<void> => {
   try {
-    await api.delete(`/profile/publications/${pubId}/`);
+    await api.delete(`/api/profile/publications/${pubId}/`);
   } catch (error: any) {
     console.error(
       `Delete publication ${pubId} error:`,
       error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
+export const getPublicUserProfile = async (
+  userId: string
+): Promise<PublicProfileData> => {
+  try {
+    const response = await api.get<PublicProfileData>(
+      `/api/users/${userId}/profile/`
+    );
+    return response.data;
+  } catch (error) {
+    const axiosError = error as AxiosError;
+    console.error(
+      `Error fetching public profile for ${userId}:`,
+      axiosError.response?.data || axiosError.message
     );
     throw error;
   }

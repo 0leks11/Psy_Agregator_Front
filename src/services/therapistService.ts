@@ -6,13 +6,29 @@ import {
   PublicationCreateUpdateData,
   TherapistPublicData,
 } from "../types/types";
+import { PublicProfileData, ApiTherapistListData } from "../types/api";
 import api from "./api";
+import { AxiosError } from "axios";
 
-export const getTherapists = async (): Promise<TherapistProfileReadData[]> => {
-  const response = await api.get<TherapistProfileReadData[]>(
-    "/api/therapists/"
-  );
-  return response.data;
+interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
+export const getTherapists = async (): Promise<
+  PaginatedResponse<ApiTherapistListData>
+> => {
+  try {
+    const response = await api.get<PaginatedResponse<ApiTherapistListData>>(
+      "/api/therapists/"
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching therapists:", error);
+    throw error;
+  }
 };
 
 export const getTherapistById = async (
@@ -262,4 +278,22 @@ export const deleteTherapistPublication = async (
   await api.delete(
     `/api/therapists/${therapistId}/publications/${publicationId}/`
   );
+};
+
+export const getPublicUserProfile = async (
+  publicId: string
+): Promise<PublicProfileData> => {
+  try {
+    const response = await api.get<PublicProfileData>(
+      `/api/users/${publicId}/profile/`
+    );
+    return response.data;
+  } catch (error) {
+    const axiosError = error as AxiosError;
+    console.error(
+      `Error fetching public profile for ${publicId}:`,
+      axiosError.response?.data || axiosError.message
+    );
+    throw error;
+  }
 };
