@@ -4,10 +4,12 @@ import { Link } from "react-router-dom";
 import { FullUserData } from "../types/user";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
+import { API_URL, DEFAULT_AVATAR_URL, FALLBACK_AVATAR } from "../constants";
 
 const UserCabinetPage: React.FC = () => {
   const { user, loading } = useAuth();
   const typedUser = user as FullUserData | null;
+  const backupAvatarUrl = `${API_URL}${DEFAULT_AVATAR_URL}`;
 
   if (loading) {
     return (
@@ -38,12 +40,17 @@ const UserCabinetPage: React.FC = () => {
         <div className="bg-white shadow-lg rounded-lg p-6">
           <div className="flex items-center mb-6">
             <img
-              src={
-                typedUser.profile?.profile_picture_url || "/default-avatar.png"
-              }
+              src={typedUser.profile?.profile_picture_url}
               alt={`${typedUser.first_name} ${typedUser.last_name}`}
               className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
-              onError={(e) => (e.currentTarget.src = "/default-avatar.png")}
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                if (target.src !== backupAvatarUrl) {
+                  target.src = backupAvatarUrl;
+                } else {
+                  target.src = FALLBACK_AVATAR;
+                }
+              }}
             />
             <div className="ml-4">
               <h2 className="text-xl font-semibold text-gray-700">

@@ -16,8 +16,8 @@ import ProfilePublicationsListSection from "../../components/profileSections/pub
 import ProfilePhotoGalleryViewSection from "../../components/profileSections/gallery/ProfilePhotoGallerySection";
 
 const UserProfilePage: React.FC = () => {
-  const { userId } = useParams<{ userId: string }>();
-  console.log("UserProfilePage - Extracted userId:", userId);
+  const { publicId } = useParams<{ publicId: string }>();
+  console.log("UserProfilePage - Extracted publicId:", publicId);
   const [profileData, setProfileData] = useState<PublicProfileData | null>(
     null
   );
@@ -26,9 +26,9 @@ const UserProfilePage: React.FC = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!userId) {
+      if (!publicId) {
         setError("ID профиля не указан.");
-        console.error("UserProfilePage - userId is missing!");
+        console.error("UserProfilePage - publicId is missing!");
         setLoading(false);
         return;
       }
@@ -38,9 +38,9 @@ const UserProfilePage: React.FC = () => {
       try {
         console.log(
           "UserProfilePage - Attempting to fetch profile for ID:",
-          userId
+          publicId
         );
-        const data = await getPublicUserProfile(userId);
+        const data = await getPublicUserProfile(publicId);
         console.log("UserProfilePage - Fetched profile data:", data);
         setProfileData(data);
       } catch (err) {
@@ -60,7 +60,7 @@ const UserProfilePage: React.FC = () => {
     };
 
     fetchProfile();
-  }, [userId]);
+  }, [publicId]);
 
   if (loading) {
     return (

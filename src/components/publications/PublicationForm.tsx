@@ -8,6 +8,7 @@ import {
 import EditControls from "../common/EditControls"; // Используем общие кнопки
 import ErrorMessage from "../common/ErrorMessage";
 import LoadingSpinner from "../common/LoadingSpinner"; // Импорт спиннера
+import { useParams } from "react-router-dom";
 
 interface PublicationFormProps {
   existingPublication?: Publication; // Для режима редактирования
@@ -26,6 +27,9 @@ const PublicationForm: React.FC<PublicationFormProps> = ({
   const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { publicId } = useParams<{ publicId: string }>();
+
+  const defaultAvatar = "/media/defaults/default-avatar.png";
 
   useEffect(() => {
     if (isEditing && existingPublication) {

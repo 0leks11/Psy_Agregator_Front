@@ -38,7 +38,7 @@ const App: React.FC = () => {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/therapists" element={<TherapistListPage />} />
-              <Route path="/users/:userId" element={<UserProfilePage />} />
+              <Route path="/users/:publicId" element={<UserProfilePage />} />
 
               {/* Protected Routes */}
               <Route

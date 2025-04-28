@@ -198,17 +198,17 @@ export const deleteMyPublication = async (pubId: number): Promise<void> => {
 };
 
 export const getPublicUserProfile = async (
-  userId: string
+  publicId: string
 ): Promise<PublicProfileData> => {
   try {
     const response = await api.get<PublicProfileData>(
-      `/api/users/${userId}/profile/`
+      `/api/users/${publicId}/profile/`
     );
     return response.data;
   } catch (error) {
     const axiosError = error as AxiosError;
     console.error(
-      `Error fetching public profile for ${userId}:`,
+      `Error fetching public profile for ${publicId}:`,
       axiosError.response?.data || axiosError.message
     );
     throw error;
