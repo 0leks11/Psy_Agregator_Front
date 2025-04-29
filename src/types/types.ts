@@ -43,9 +43,12 @@ export interface ClientProfileData {
 
 export interface FullUserData extends BaseUserData {
   email: string;
-  profile: UserProfileData | null;
-  therapist_profile: TherapistProfileData | null;
-  client_profile: ClientProfileData | null;
+  role: "CLIENT" | "THERAPIST" | "ADMIN";
+  created_at: string;
+  updated_at: string;
+  profile: UserProfileData;
+  therapist_profile?: TherapistProfilePrivateData;
+  client_profile?: ClientProfileData;
 }
 
 // Типы для навыков и языков

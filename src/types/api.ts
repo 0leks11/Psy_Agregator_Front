@@ -55,6 +55,7 @@ export interface ProtectedRouteProps {
 export interface SimplePublication {
   id: string; // UUID
   title?: string | null;
+  content?: string | null;
   created_at: string;
   // content_snippet?: string; // Если добавили на бэке
 }

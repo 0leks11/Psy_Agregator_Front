@@ -177,15 +177,18 @@ const ProfileSkillsSection: React.FC<ProfileSectionProps> = ({
       ) : (
         // Режим отображения: Бейджи/Список
         <div className="flex flex-wrap gap-2">
-          {selectedSkillIds.length > 0 ? (
-            selectedSkillIds.map((id) => (
-              <span
-                key={id}
-                className="inline-block bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
-              >
-                {getSkillNameById(id)}
-              </span>
-            ))
+          {userData?.therapist_profile?.skills &&
+          userData.therapist_profile.skills.length > 0 ? (
+            userData.therapist_profile.skills.map(
+              (skill: { id: number; name: string }) => (
+                <span
+                  key={skill.id}
+                  className="inline-block bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
+                >
+                  {skill.name}
+                </span>
+              )
+            )
           ) : (
             <p className="text-gray-400 italic">Не выбрано</p>
           )}

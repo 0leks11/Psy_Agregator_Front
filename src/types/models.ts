@@ -109,9 +109,12 @@ export interface ClientProfileReadData
 // Обновляем FullUserData для ЛК
 export interface FullUserData extends BaseUserData {
   email: string;
+  role: "CLIENT" | "THERAPIST" | "ADMIN";
+  created_at: string;
+  updated_at: string;
   profile: UserProfileData;
-  therapist_profile?: TherapistProfilePrivateData; // Используем приватные данные для ЛК
-  client_profile?: ClientProfileData; // Или ClientProfileReadData
+  therapist_profile?: TherapistProfilePrivateData;
+  client_profile?: ClientProfileData;
 }
 
 // Полное определение публикации

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { getPublicUserProfile } from "../../services/profileService";
 import { PublicProfileData } from "../../types/api";
-import { FullUserData } from "../../types/types";
+import { FullUserData } from "../../types/user";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import ErrorMessage from "../../components/common/ErrorMessage";
 
@@ -42,6 +42,17 @@ const UserProfilePage: React.FC = () => {
         const data = await getPublicUserProfile(publicId);
         console.log("UserProfilePage - Fetched profile data:", data);
         setProfileData(data);
+        // Добавляем логирование публикаций
+        console.log(
+          "UserProfilePage - Publications from API:",
+          data.publications
+        );
+        if (data.publications && data.publications.length > 0) {
+          console.log(
+            "UserProfilePage - First publication content:",
+            data.publications[0].content
+          );
+        }
       } catch (err) {
         console.error("Ошибка при загрузке профиля:", err);
         if (err instanceof Error) {
@@ -96,6 +107,7 @@ const UserProfilePage: React.FC = () => {
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     profile: {
+      id: 0,
       role: "THERAPIST",
       gender: "UNKNOWN",
       gender_code: "UNKNOWN",
@@ -103,15 +115,14 @@ const UserProfilePage: React.FC = () => {
       profile_picture_url: profileData.profile_picture_url,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      id: 0,
     },
     therapist_profile: {
       id: 0,
       user_profile: 0,
       about: profileData.about || "",
       experience_years: profileData.experience_years || 0,
-      skills: profileData.skills.map((s) => s.name),
-      languages: profileData.languages.map((l) => l.name),
+      skills: profileData.skills,
+      languages: profileData.languages,
       total_hours_worked: null,
       display_hours: false,
       office_location: "",
@@ -136,14 +147,19 @@ const UserProfilePage: React.FC = () => {
   };
 
   // Преобразуем публикации в формат Publication
-  const publicationsForSection = profileData.publications.map((pub) => ({
-    id: pub.id,
-    title: pub.title || "",
-    content: "", // В публичном API не передаем полный контент
-    created_at: pub.created_at,
-    author: userDataForSections,
-    is_published: true, // Публичные публикации всегда опубликованы
-  }));
+  const publicationsForSection = profileData.publications.map((pub) => {
+    console.log("UserProfilePage - Processing publication:", pub);
+    const transformedPub = {
+      id: pub.id,
+      title: pub.title || "",
+      content: pub.content || "", // Используем контент из API, если он есть
+      created_at: pub.created_at,
+      author: userDataForSections,
+      is_published: true, // Публичные публикации всегда опубликованы
+    };
+    console.log("UserProfilePage - Transformed publication:", transformedPub);
+    return transformedPub;
+  });
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -173,12 +189,18 @@ const UserProfilePage: React.FC = () => {
           <ProfileVideoSection videoUrl={profileData.short_video_url} />
         )}
 
-        {profileData.publications && profileData.publications.length > 0 && (
+        {/* Секция публикаций */}
+        {profileData.publications && profileData.publications.length > 0 ? (
           <ProfilePublicationsSection
             userData={userDataForSections}
             isEditable={false}
             initialPublications={publicationsForSection}
           />
+        ) : (
+          <div className="bg-white shadow rounded-lg p-6 mb-6">
+            <h3 className="text-xl font-semibold mb-4">Публикации</h3>
+            <p className="text-gray-500 italic">Публикаций пока нет.</p>
+          </div>
         )}
 
         {profileData.photos && profileData.photos.length > 0 && (

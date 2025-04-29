@@ -190,13 +190,14 @@ const ProfileLanguagesSection: React.FC<ProfileSectionProps> = ({
       ) : (
         // Режим отображения: Бейджи/Список
         <div className="flex flex-wrap gap-2">
-          {selectedLanguageIds.length > 0 ? (
-            selectedLanguageIds.map((id) => (
+          {userData?.therapist_profile?.languages &&
+          userData.therapist_profile.languages.length > 0 ? (
+            userData.therapist_profile.languages.map((language) => (
               <span
-                key={id}
+                key={language.id}
                 className="inline-block bg-teal-100 text-teal-800 text-sm font-medium px-3 py-1 rounded-full"
               >
-                {getLanguageNameById(id)}
+                {language.name}
               </span>
             ))
           ) : (

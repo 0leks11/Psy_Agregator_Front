@@ -1,15 +1,13 @@
+import { TherapistPhotoData } from "./models";
+
 // Типы для пользователя и профиля
 export interface UserProfileData {
   id: number;
-  user: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  date_of_birth: string;
+  role: "CLIENT" | "THERAPIST" | "ADMIN";
   gender: string;
+  gender_code: "MALE" | "FEMALE" | "OTHER" | "UNKNOWN";
   gender_display: string;
-  photo: string | null;
+  profile_picture_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -17,19 +15,23 @@ export interface UserProfileData {
 export interface TherapistProfileData {
   id: number;
   user_profile: number;
-  about: string;
+  about: string | null;
   experience_years: number;
-  office_location: string;
+  skills: Array<{ id: number; name: string }>;
+  languages: Array<{ id: number; name: string }>;
+  total_hours_worked: number | null;
+  display_hours: boolean;
+  office_location: string | null;
+  is_verified: boolean;
+  is_subscribed: boolean;
+  photos: TherapistPhotoData[];
   video_intro_url: string | null;
   website_url: string | null;
   linkedin_url: string | null;
-  photos: string[];
-  status: string | null;
-  status_display: string | null;
-  is_verified: boolean;
-  is_subscribed: boolean;
   created_at: string;
   updated_at: string;
+  status: string | null;
+  status_display: string | null;
 }
 
 export interface ClientProfileData {
@@ -43,20 +45,19 @@ export interface ClientProfileData {
 
 export interface BaseUserData {
   id: number;
+  public_id: string;
   first_name: string;
   last_name: string;
 }
 
-export interface FullUserData {
-  id: number;
+export interface FullUserData extends BaseUserData {
   email: string;
-  first_name: string;
-  last_name: string;
-  role: string;
-  profile: UserProfileData;
-  therapist_profile: TherapistProfileData | null;
+  role: "CLIENT" | "THERAPIST" | "ADMIN";
   created_at: string;
   updated_at: string;
+  profile: UserProfileData;
+  therapist_profile?: TherapistProfileData;
+  client_profile?: ClientProfileData;
 }
 
 // Типы для навыков и языков
@@ -73,15 +74,11 @@ export interface LanguageData {
 }
 
 // Опции для выбора пола
-export const GENDER_OPTIONS: {
-  value: UserProfileData["gender_code"];
-  label: string;
-}[] = [
-  { value: "UNKNOWN", label: "Не указан" },
-  { value: "MALE", label: "Мужчина" },
-  { value: "FEMALE", label: "Женщина" },
-  { value: "OTHER", label: "Другое" },
-];
+export const GENDER_OPTIONS = [
+  { code: "MALE", display: "Мужской" },
+  { code: "FEMALE", display: "Женский" },
+  { code: "UNKNOWN", display: "Не указано" },
+] as const;
 
 export interface User {
   id: number;

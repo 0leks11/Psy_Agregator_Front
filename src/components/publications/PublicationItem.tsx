@@ -35,8 +35,23 @@ const PublicationItem: React.FC<PublicationItemProps> = ({
   const [showFullContent, setShowFullContent] = useState(false); // Флаг, нужно ли показывать кнопку "Развернуть"
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isExpandable, setIsExpandable] = useState(false);
 
   const contentRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    console.log("PublicationItem - Received publication:", publication);
+    console.log("Publication content:", {
+      content: publication.content,
+      hasContent: !!publication.content,
+      contentLength: publication.content?.length,
+    });
+
+    if (contentRef.current) {
+      const contentHeight = contentRef.current.scrollHeight;
+      setIsExpandable(contentHeight > 100);
+    }
+  }, [publication]);
 
   // Определяем, нужно ли показывать кнопку "Развернуть"
   useEffect(() => {
@@ -45,6 +60,12 @@ const PublicationItem: React.FC<PublicationItemProps> = ({
       const currentHeight = contentRef.current.scrollHeight; // Полная высота
       const collapsedHeight = MAX_COLLAPSED_LINES * LINE_HEIGHT_APPROX * 16; // Примерный расчет в px (16 = базовый размер шрифта)
       setShowFullContent(currentHeight > collapsedHeight + 20); // + небольшой запас
+      console.log("Publication content:", {
+        content: publication.content,
+        currentHeight,
+        collapsedHeight,
+        showFullContent: currentHeight > collapsedHeight + 20,
+      });
     }
     // Мы не сбрасываем isExpanded при изменении publication, чтобы открытый пост оставался открытым
   }, [publication.content]); // Пересчитываем при изменении контента
@@ -189,15 +210,24 @@ const PublicationItem: React.FC<PublicationItemProps> = ({
           <div
             ref={contentRef}
             className={`prose prose-sm max-w-none text-gray-700 overflow-hidden transition-all duration-300 ease-in-out ${
-              !isExpanded
-                ? `max-h-[${MAX_COLLAPSED_LINES * LINE_HEIGHT_APPROX}rem]`
-                : "" // Ограничиваем высоту Tailwind'ом
+              !isExpanded ? "max-h-[15rem]" : "max-h-none"
             }`}
-            dangerouslySetInnerHTML={{ __html: publication.content }} // Осторожно! Убедитесь, что контент санитайзится на бэкенде!
-            // Или используйте markdown-рендер, если храните markdown:
-            // <ReactMarkdown className="prose prose-sm ...">{publication.content}</ReactMarkdown>
           >
-            {/* <p>{publication.content}</p> */}
+            {publication.content ? (
+              <div
+                className="whitespace-pre-wrap"
+                dangerouslySetInnerHTML={{
+                  __html: publication.content.includes("<")
+                    ? publication.content
+                    : publication.content
+                        .split("\n")
+                        .map((line) => `<p>${line}</p>`)
+                        .join(""),
+                }}
+              />
+            ) : (
+              <p className="text-gray-500 italic">Нет содержания</p>
+            )}
           </div>
 
           {/* Кнопка Развернуть/Свернуть */}

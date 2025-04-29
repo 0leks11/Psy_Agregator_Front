@@ -76,21 +76,10 @@ const MyProfilePage: React.FC = () => {
           <ProfileGenderSection userData={user} isEditable={true} />
           <ProfileAboutSection userData={user} isEditable={true} />
           <ProfileSocialLinksSection userData={user} isEditable={true} />
-          <ProfileSkillsSection userData={user} isEditable={true} />
-          <ProfileLanguagesSection userData={user} isEditable={true} />
-          <ProfileExperienceHoursSection userData={user} isEditable={true} />
-          <ProfileVideoSection userData={user} isEditable={true} />
-          <ProfilePhotoGallerySection userData={user} isEditable={true} />
-          <ProfileLanguagesSection userData={user} isEditable={true} />
-          <ProfileVideoSection userData={user} isEditable={true} />
-          <ProfilePhotoGallerySection userData={user} isEditable={true} />
           <ProfileSubscriptionStatusSection
             userData={user}
             isEditable={false}
           />
-          <ProfileExperienceHoursSection userData={user} isEditable={true} />
-
-          {/* УБРАЛИ дубликаты Languages и Publications отсюда */}
 
           {/* --- СЕКЦИИ, СПЕЦИФИЧНЫЕ ДЛЯ ТЕРАПЕВТА --- */}
           {isTherapist && (
@@ -98,28 +87,18 @@ const MyProfilePage: React.FC = () => {
               {/* Навыки/Специализации (отобразит therapist_profile.skills) */}
               <ProfileSkillsSection userData={user} isEditable={true} />
               {/* Языки */}
-              <ProfileLanguagesSection userData={user} isEditable={true} />{" "}
-              {/* Оставили здесь */}
+              <ProfileLanguagesSection userData={user} isEditable={true} />
               {/* Опыт и Часы */}
               <ProfileExperienceHoursSection
                 userData={user}
                 isEditable={true}
-              />
-              {/* Статус подписки */}
-              <ProfileSubscriptionStatusSection
-                userData={user}
-                isEditable={false}
               />
               {/* Видео визитка */}
               <ProfileVideoSection userData={user} isEditable={true} />
               {/* Фотогалерея */}
               <ProfilePhotoGallerySection userData={user} isEditable={true} />
               {/* Публикации */}
-              <ProfilePublicationsSection
-                userData={user}
-                isEditable={true}
-              />{" "}
-              {/* Оставили здесь */}
+              <ProfilePublicationsSection userData={user} isEditable={true} />
             </>
           )}
 
@@ -128,8 +107,6 @@ const MyProfilePage: React.FC = () => {
             <>
               {/* Интересующие темы (используем тот же компонент, он отобразит client_profile.interested_topics) */}
               <ProfileSkillsSection userData={user} isEditable={true} />
-              {/* Языки для клиента, если нужно? Если нет - убрать */}
-              {/* <ProfileLanguagesSection userData={user} isEditable={true} /> */}
             </>
           )}
         </div>
