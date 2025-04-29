@@ -1,6 +1,6 @@
 // src/components/profileSections/publications/ProfilePublicationsSection.tsx
 import React, { useState, useEffect } from "react";
-import { ProfileSectionProps, User, Publication } from "../../../types/models"; // Добавить тип Publication
+import { ProfileSectionProps, Publication } from "../../../types/models";
 import { useAuth } from "../../../contexts/AuthContext";
 // Предположим, есть сервис для публикаций:
 import {
@@ -16,61 +16,84 @@ import { PlusCircleIcon } from "@heroicons/react/24/outline";
 import ProfileWrapper from "../common/ProfileWrapper"; // Используем обертку, но без стандартной кнопки edit
 import { toast } from "react-toastify";
 
-const ProfilePublicationsSection: React.FC<ProfileSectionProps> = ({
+// Расширяем интерфейс для поддержки внешних публикаций
+interface ProfilePublicationsSectionProps extends ProfileSectionProps {
+  initialPublications?: Publication[] | null;
+}
+
+const ProfilePublicationsSection: React.FC<ProfilePublicationsSectionProps> = ({
   userData,
   isEditable,
+  initialPublications,
 }) => {
   const { user } = useAuth(); // Нужен для определения, чей профиль смотрим
-  const [publications, setPublications] = useState<Publication[]>([]);
+  const [publications, setPublications] = useState<Publication[]>(
+    initialPublications || []
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showNewPostForm, setShowNewPostForm] = useState(false);
 
-  // Определяем ID пользователя, чьи публикации загружать
-  const targetUserId = userData?.id;
+  // Определяем ID пользователя, чьи публикации загружать ТОЛЬКО ЕСЛИ isEditable
+  const loggedInUserId = user?.id;
 
-  // Загрузка публикаций
+  // Загрузка публикаций ТОЛЬКО для своего профиля (когда isEditable === true)
   useEffect(() => {
-    if (!targetUserId) return; // Не загружать, если нет ID
-
-    const fetchPublications = async () => {
-      setIsLoading(true);
+    // Загружаем, только если это свой профиль И initialPublications не были переданы
+    if (isEditable && loggedInUserId && !initialPublications) {
+      const fetchOwnPublications = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+          console.log(
+            `ProfilePublicationsSection: Fetching publications for own profile (ID: ${loggedInUserId})`
+          );
+          const fetchedPublications = await getMyPublications(loggedInUserId);
+          setPublications(fetchedPublications || []);
+        } catch (err: any) {
+          console.error("Error fetching own publications:", err);
+          setError("Не удалось загрузить ваши публикации.");
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchOwnPublications();
+    } else if (!isEditable && initialPublications) {
+      // Если смотрим чужой профиль, используем УЖЕ ЗАГРУЖЕННЫЕ данные из props
+      console.log(
+        "ProfilePublicationsSection: Using initialPublications from props"
+      );
+      setPublications(initialPublications);
+      setIsLoading(false);
       setError(null);
-      try {
-        // Нужна функция, которая получает публикации по ID пользователя
-        // Возможно, getMyPublications если isEditable, и getPublicationsByUserId если !isEditable
-        const fetchedPublications = await getMyPublications(targetUserId); // Уточнить API
-        setPublications(fetchedPublications || []);
-      } catch (err: any) {
-        console.error("Error fetching publications:", err);
-        setError("Не удалось загрузить публикации.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    } else if (!isEditable && !initialPublications) {
+      // Случай, когда смотрим чужой профиль, но данные не пришли (ошибка?)
+      console.warn(
+        "ProfilePublicationsSection: Viewing non-editable profile but no initialPublications provided."
+      );
+      setPublications([]);
+      setIsLoading(false);
+    }
+  }, [isEditable, loggedInUserId, initialPublications]);
 
-    fetchPublications();
-  }, [targetUserId]); // Перезагружаем при смене пользователя
-
-  // Обработчик успешного добавления нового поста (вызывается из PublicationForm/PublicationItem)
+  // Обработчик успешного добавления нового поста
   const handlePostAdded = (newPost: Publication) => {
-    setPublications((prev) => [newPost, ...prev]); // Добавляем новый пост в начало списка
-    setShowNewPostForm(false); // Скрываем форму
+    setPublications((prev) => [newPost, ...prev]);
+    setShowNewPostForm(false);
     toast.success("Публикация добавлена!");
   };
 
-  // Обработчик успешного удаления поста (вызывается из PublicationItem)
+  // Обработчик успешного удаления поста
   const handlePostDeleted = (deletedPostId: number | string) => {
     setPublications((prev) => prev.filter((post) => post.id !== deletedPostId));
     toast.success("Публикация удалена!");
   };
 
-  // Обработчик успешного обновления поста (вызывается из PublicationItem)
+  // Обработчик успешного обновления поста
   const handlePostUpdated = (updatedPost: Publication) => {
     setPublications((prev) =>
       prev.map((post) => (post.id === updatedPost.id ? updatedPost : post))
     );
-    // Уведомление об успехе будет внутри PublicationItem
   };
 
   // --- Рендеринг ---

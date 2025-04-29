@@ -1,70 +1,59 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { getTherapists } from "../../services/therapistService";
 import { ApiTherapistListData } from "../../types/api";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import ErrorMessage from "../../components/common/ErrorMessage";
 import TherapistCard from "../../components/therapistList/TherapistCard";
-
-interface PaginatedResponse<T> {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: T[];
-}
+import { useAuth } from "../../contexts/AuthContext";
 
 const TherapistListPage: React.FC = () => {
-  const [therapists, setTherapists] = useState<ApiTherapistListData[]>([]);
+  const { user } = useAuth();
+  const loggedInUserId = user?.id;
+
+  const [allTherapists, setAllTherapists] = useState<ApiTherapistListData[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [count, setCount] = useState(0);
   const [nextUrl, setNextUrl] = useState<string | null>(null);
   const [prevUrl, setPrevUrl] = useState<string | null>(null);
 
-  const fetchTherapists = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await getTherapists();
-
-      console.log("API Response:", response);
-
-      if (response && Array.isArray(response.results)) {
-        const results = response.results;
-        console.log("Raw Results:", results);
-
-        // Временная минимальная фильтрация
-        const validTherapists = results.filter((therapist) => {
-          const isValid =
-            therapist &&
-            therapist.id &&
-            therapist.first_name &&
-            therapist.last_name;
-
-          if (!isValid) {
-            console.warn("Invalid therapist data:", therapist);
-          }
-
-          return isValid;
-        });
-
-        console.log("Filtered Therapists:", validTherapists);
-        setTherapists(validTherapists);
-        setCount(response.count);
-        setNextUrl(response.next);
-        setPrevUrl(response.previous);
-      }
-    } catch (err) {
-      console.error("Error fetching therapists:", err);
-      setError("Не удалось загрузить список терапевтов");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchTherapists();
-  }, []);
+    const fetchAndFilterTherapists = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await getTherapists();
+
+        console.log("API Response:", response);
+
+        if (response && Array.isArray(response.results)) {
+          const results = response.results;
+          console.log("Raw Results:", results);
+
+          // Фильтруем: исключаем текущего пользователя, если он залогинен
+          const filteredResults = loggedInUserId
+            ? results.filter((therapist) => therapist.id !== loggedInUserId)
+            : results;
+
+          console.log("Filtered Results:", filteredResults);
+
+          setAllTherapists(filteredResults);
+          setCount(response.count);
+          setNextUrl(response.next);
+          setPrevUrl(response.previous);
+        }
+      } catch (err) {
+        console.error("Error fetching therapists:", err);
+        setError("Не удалось загрузить список терапевтов");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAndFilterTherapists();
+  }, [loggedInUserId]);
 
   if (loading) {
     return (
@@ -84,18 +73,13 @@ const TherapistListPage: React.FC = () => {
         Наши специалисты
       </h1>
 
-      {console.log("Rendering therapists count:", therapists.length)}
-
-      {!loading && !error && therapists.length > 0 ? (
+      {!loading && !error && allTherapists.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {therapists.map((therapist) => {
-            console.log("Rendering therapist:", therapist);
-            return (
-              <div key={therapist.id} className="border border-red-500">
-                <TherapistCard therapist={therapist} />
-              </div>
-            );
-          })}
+          {allTherapists.map((therapist) => (
+            <div key={therapist.id} className="border border-red-500">
+              <TherapistCard therapist={therapist} />
+            </div>
+          ))}
         </div>
       ) : (
         !loading &&

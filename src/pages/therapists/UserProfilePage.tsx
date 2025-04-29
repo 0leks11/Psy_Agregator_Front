@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { getPublicUserProfile } from "../../services/profileService";
 import { PublicProfileData } from "../../types/api";
+import { FullUserData } from "../../types/types";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import ErrorMessage from "../../components/common/ErrorMessage";
 
@@ -12,12 +13,11 @@ import ProfileSkillsSection from "../../components/profileSections/tags/ProfileS
 import ProfileLanguagesSection from "../../components/profileSections/tags/ProfileLanguagesSection";
 import ProfileStatusSection from "../../components/profileSections/details/ProfileSubscriptionStatusSection";
 import ProfileVideoSection from "../../components/profileSections/content/ProfileVideoSection";
-import ProfilePublicationsListSection from "../../components/profileSections/publications/ProfilePublicationsSection";
+import ProfilePublicationsSection from "../../components/profileSections/publications/ProfilePublicationsSection";
 import ProfilePhotoGalleryViewSection from "../../components/profileSections/gallery/ProfilePhotoGallerySection";
 
 const UserProfilePage: React.FC = () => {
   const { publicId } = useParams<{ publicId: string }>();
-  console.log("UserProfilePage - Extracted publicId:", publicId);
   const [profileData, setProfileData] = useState<PublicProfileData | null>(
     null
   );
@@ -28,7 +28,6 @@ const UserProfilePage: React.FC = () => {
     const fetchProfile = async () => {
       if (!publicId) {
         setError("ID профиля не указан.");
-        console.error("UserProfilePage - publicId is missing!");
         setLoading(false);
         return;
       }
@@ -87,43 +86,64 @@ const UserProfilePage: React.FC = () => {
   }
 
   // Создаем адаптированные данные для совместимости с компонентами
-  const userDataForSections = {
+  const userDataForSections: FullUserData = {
     id: 0,
     public_id: profileData.public_id,
-    first_name: profileData.first_name,
-    last_name: profileData.last_name,
+    first_name: profileData.first_name || "",
+    last_name: profileData.last_name || "",
     email: "",
+    role: "THERAPIST",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
     profile: {
-      role: "THERAPIST" as const,
-      gender: "UNKNOWN" as const,
+      role: "THERAPIST",
+      gender: "UNKNOWN",
+      gender_code: "UNKNOWN",
       gender_display: "",
       profile_picture_url: profileData.profile_picture_url,
-      pronouns: profileData.pronouns,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      id: 0,
     },
     therapist_profile: {
       id: 0,
-      about: profileData.about,
-      experience_years: 0,
-      is_verified: true,
-      is_subscribed: true,
-      skills: profileData.skills,
-      languages: profileData.languages,
+      user_profile: 0,
+      about: profileData.about || "",
+      experience_years: profileData.experience_years || 0,
+      skills: profileData.skills.map((s) => s.name),
+      languages: profileData.languages.map((l) => l.name),
       total_hours_worked: null,
       display_hours: false,
-      office_location: null,
-      status: profileData.status,
-      status_display: profileData.status_display,
-      short_video_url: profileData.short_video_url,
+      office_location: "",
+      video_intro_url: profileData.short_video_url,
+      website_url: "",
+      linkedin_url: "",
       photos: profileData.photos.map((url) => ({
         id: 0,
+        therapist_profile: 0,
         image: url,
         caption: "",
         order: 0,
       })),
+      is_verified: profileData.is_verified || false,
+      is_subscribed: profileData.is_subscribed || false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      status: "",
+      status_display: "",
     },
     client_profile: null,
-    publications: profileData.publications,
   };
+
+  // Преобразуем публикации в формат Publication
+  const publicationsForSection = profileData.publications.map((pub) => ({
+    id: pub.id,
+    title: pub.title || "",
+    content: "", // В публичном API не передаем полный контент
+    created_at: pub.created_at,
+    author: userDataForSections,
+    is_published: true, // Публичные публикации всегда опубликованы
+  }));
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -154,16 +174,16 @@ const UserProfilePage: React.FC = () => {
         )}
 
         {profileData.publications && profileData.publications.length > 0 && (
-          <ProfilePublicationsListSection
+          <ProfilePublicationsSection
             userData={userDataForSections}
             isEditable={false}
+            initialPublications={publicationsForSection}
           />
         )}
 
         {profileData.photos && profileData.photos.length > 0 && (
           <ProfilePhotoGalleryViewSection
-            userData={userDataForSections}
-            isEditable={false}
+            photos={userDataForSections.therapist_profile?.photos || []}
           />
         )}
       </div>

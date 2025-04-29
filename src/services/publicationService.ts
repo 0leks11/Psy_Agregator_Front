@@ -1,11 +1,11 @@
 // src/services/publicationService.ts
 import api from "./api";
-import { PublicationData } from "../types/types"; // Убедитесь, что тип PublicationData определен
+import { Publication } from "../types/models";
 
 // Получение публикаций пользователя (заменить targetUserId на нужный параметр API)
 export const getMyPublications = async (
   userId: number | string
-): Promise<PublicationData[]> => {
+): Promise<Publication[]> => {
   try {
     const response = await api.get(`/api/publications/?author=${userId}`);
     return response.data || [];
@@ -19,7 +19,7 @@ export const getMyPublications = async (
 export const addPublication = async (data: {
   title: string;
   content: string;
-}): Promise<PublicationData> => {
+}): Promise<Publication> => {
   try {
     const response = await api.post("/api/publications/", data);
     return response.data;
@@ -31,9 +31,9 @@ export const addPublication = async (data: {
 
 // Обновление существующей публикации
 export const updatePublication = async (
-  id: number,
+  id: number | string,
   data: { title: string; content: string }
-): Promise<PublicationData> => {
+): Promise<Publication> => {
   try {
     const response = await api.patch(`/api/publications/${id}/`, data);
     return response.data;
@@ -44,7 +44,7 @@ export const updatePublication = async (
 };
 
 // Удаление публикации
-export const deletePublication = async (id: number): Promise<void> => {
+export const deletePublication = async (id: number | string): Promise<void> => {
   try {
     await api.delete(`/api/publications/${id}/`);
   } catch (error) {
