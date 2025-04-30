@@ -34,7 +34,7 @@ export const updateBaseProfile = async (
 export const updateProfilePicture = async (
   formData: FormData
 ): Promise<FullUserData> => {
-  const response = await api.patch<FullUserData>(
+  const response = await api.post<FullUserData>(
     "/api/profile/update/picture/",
     formData,
     {

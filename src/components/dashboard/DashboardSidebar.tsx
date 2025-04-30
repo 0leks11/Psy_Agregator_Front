@@ -2,13 +2,12 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import {
-  UserCircleIcon,
   PencilSquareIcon,
   MagnifyingGlassIcon,
   CalendarDaysIcon,
   BookmarkIcon,
   CreditCardIcon,
-  ArrowLeftOnRectangleIcon,
+  ArrowLeftEndOnRectangleIcon,
   BookOpenIcon,
   PhotoIcon,
 } from "@heroicons/react/24/outline"; // Иконки для примера
@@ -134,7 +133,7 @@ const DashboardSidebar: React.FC = () => {
         onClick={handleLogout}
         className={`${commonLinkClasses} ${inactiveLinkClasses} w-full text-left`}
       >
-        <ArrowLeftOnRectangleIcon className="h-5 w-5 mr-3 flex-shrink-0" />
+        <ArrowLeftEndOnRectangleIcon className="h-5 w-5 mr-3 flex-shrink-0" />
         Выход
       </button>
     </nav>

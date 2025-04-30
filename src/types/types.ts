@@ -35,8 +35,8 @@ export interface TherapistProfileData {
 export interface ClientProfileData {
   id: number;
   user_profile: number;
-  request_details: string;
-  interested_topics: number[];
+  request_details: string | null;
+  interested_topics: Array<{ id: number; name: string }>;
   created_at: string;
   updated_at: string;
 }

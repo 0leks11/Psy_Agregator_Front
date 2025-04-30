@@ -53,7 +53,10 @@ const ProfileGenderSection: React.FC<ProfileSectionProps> = ({
     setError(null);
 
     try {
-      const payload = { gender };
+      const payload = {
+        gender: gender,
+        gender_code: gender,
+      };
       const updatedUserData = await updateBaseProfile(payload);
 
       if (updatedUserData) {

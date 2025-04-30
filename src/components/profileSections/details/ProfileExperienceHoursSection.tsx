@@ -1,16 +1,11 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { updateTherapistProfile } from "../../../services/profileService";
-import LoadingSpinner from "../../common/LoadingSpinner";
 import ErrorMessage from "../../common/ErrorMessage";
 import EditControls from "../../common/EditControls";
 import ProfileWrapper from "../common/ProfileWrapper";
 import { toast } from "react-toastify";
-
-interface ProfileSectionProps {
-  userData: any;
-  isEditable: boolean;
-}
+import { ProfileSectionProps } from "../../../types/models";
 
 const ProfileExperienceHoursSection: React.FC<ProfileSectionProps> = ({
   userData,
@@ -129,11 +124,12 @@ const ProfileExperienceHoursSection: React.FC<ProfileSectionProps> = ({
       } else {
         throw new Error("Не удалось обновить профиль");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       const errMsg =
-        err.response?.data?.detail ||
-        err.message ||
-        "Не удалось сохранить изменения";
+        (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail ||
+        (err as Error)?.message ||
+        "Не удалось сохранить изменения.";
       setError(errMsg);
       toast.error(`Ошибка: ${errMsg}`);
     } finally {

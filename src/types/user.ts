@@ -75,9 +75,10 @@ export interface LanguageData {
 
 // Опции для выбора пола
 export const GENDER_OPTIONS = [
-  { code: "MALE", display: "Мужской" },
-  { code: "FEMALE", display: "Женский" },
-  { code: "UNKNOWN", display: "Не указано" },
+  { value: "MALE", label: "Мужской" },
+  { value: "FEMALE", label: "Женский" },
+  { value: "OTHER", label: "Другой" },
+  { value: "UNKNOWN", label: "Не указано" },
 ] as const;
 
 export interface User {

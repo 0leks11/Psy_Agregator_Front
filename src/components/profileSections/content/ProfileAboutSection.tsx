@@ -9,9 +9,10 @@ import ErrorMessage from "../../common/ErrorMessage";
 import EditControls from "../../common/EditControls";
 import ProfileWrapper from "../common/ProfileWrapper";
 import { toast } from "react-toastify";
+import { FullUserData } from "../../../types/user";
 
 interface ProfileSectionProps {
-  userData: any; // Используем any, чтобы избежать проблем с типами
+  userData: FullUserData;
   isEditable: boolean;
 }
 
@@ -71,10 +72,11 @@ const ProfileAboutSection: React.FC<ProfileSectionProps> = ({
       } else {
         throw new Error("Failed to update profile.");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       const errMsg =
-        err.response?.data?.detail ||
-        err.message ||
+        (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail ||
+        (err as Error)?.message ||
         "Не удалось сохранить изменения.";
       setError(errMsg);
       toast.error(`Ошибка: ${errMsg}`);
