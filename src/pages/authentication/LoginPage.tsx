@@ -1,6 +1,8 @@
 import React, { useState, FormEvent } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
+import ErrorMessage from "../../components/common/ErrorMessage";
 
 interface LoginFormData {
   email: string;
@@ -16,9 +18,12 @@ const LoginPage: React.FC = () => {
     password: "",
   });
   const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
     try {
       const success = await login(formData.email, formData.password);
       if (success) {
@@ -31,6 +36,8 @@ const LoginPage: React.FC = () => {
     } catch (err) {
       console.error("Login Page Submit Error:", err);
       setError("Неверный email или пароль");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -49,11 +56,7 @@ const LoginPage: React.FC = () => {
           <div className="card shadow">
             <div className="card-body">
               <h2 className="text-center mb-4">Вход</h2>
-              {error && (
-                <div className="alert alert-danger" role="alert">
-                  {error}
-                </div>
-              )}
+              {error && <ErrorMessage message={error} />}
               <form onSubmit={handleSubmit}>
                 <div className="mb-3">
                   <label htmlFor="email" className="form-label">
@@ -67,6 +70,7 @@ const LoginPage: React.FC = () => {
                     value={formData.email}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="mb-3">
@@ -81,10 +85,15 @@ const LoginPage: React.FC = () => {
                     value={formData.password}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
-                <button type="submit" className="btn btn-primary w-100">
-                  Войти
+                <button
+                  type="submit"
+                  className="btn btn-primary w-100 d-flex align-items-center justify-content-center"
+                  disabled={loading}
+                >
+                  {loading ? <LoadingSpinner /> : "Войти"}
                 </button>
               </form>
               <div className="text-center mt-3">

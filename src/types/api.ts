@@ -1,4 +1,4 @@
-import { FullUserData } from "./user";
+import { FullUserData } from "./models";
 
 // Типы для API ответов
 export interface ApiResponse<T> {

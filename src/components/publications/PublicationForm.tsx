@@ -7,8 +7,6 @@ import {
 } from "../../services/publicationService"; // Импорт API функций
 import EditControls from "../common/EditControls"; // Используем общие кнопки
 import ErrorMessage from "../common/ErrorMessage";
-import LoadingSpinner from "../common/LoadingSpinner"; // Импорт спиннера
-import { useParams } from "react-router-dom";
 
 interface PublicationFormProps {
   existingPublication?: Publication; // Для режима редактирования
@@ -27,9 +25,6 @@ const PublicationForm: React.FC<PublicationFormProps> = ({
   const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { publicId } = useParams<{ publicId: string }>();
-
-  const defaultAvatar = "/media/defaults/default-avatar.png";
 
   useEffect(() => {
     if (isEditing && existingPublication) {
@@ -69,11 +64,12 @@ const PublicationForm: React.FC<PublicationFormProps> = ({
       }
       onPostSaved(savedPost); // Вызываем колбэк с результатом
       // Сброс формы не нужен здесь, т.к. компонент либо скроется, либо обновится
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error saving publication:", err);
       const errMsg =
-        err.response?.data?.detail ||
-        err.message ||
+        (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail ||
+        (err as Error)?.message ||
         "Не удалось сохранить публикацию.";
       setError(errMsg);
       // Не вызываем onCancel при ошибке, чтобы пользователь мог исправить

@@ -2,7 +2,15 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { getPublicUserProfile } from "../../services/profileService";
 import { PublicProfileData } from "../../types/api";
-import { FullUserData } from "../../types/user";
+import {
+  FullUserData,
+  Gender,
+  UserProfileData,
+  TherapistProfilePrivateData,
+  TherapistPhotoData,
+  Skill,
+  Language,
+} from "../../types/models";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import ErrorMessage from "../../components/common/ErrorMessage";
 
@@ -96,54 +104,54 @@ const UserProfilePage: React.FC = () => {
     );
   }
 
-  // Создаем адаптированные данные для совместимости с компонентами
+  // Создаем userDataForSections в соответствии с типами из models.ts
   const userDataForSections: FullUserData = {
-    id: 0,
+    id: 0, // Заглушка
     public_id: profileData.public_id,
     first_name: profileData.first_name || "",
     last_name: profileData.last_name || "",
-    email: "",
+    email: "", // Нет в public API
     role: "THERAPIST",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: new Date().toISOString(), // Заглушка, т.к. нет в public API
+    updated_at: new Date().toISOString(), // Заглушка
     profile: {
-      id: 0,
+      // Структура UserProfileData из models.ts
       role: "THERAPIST",
-      gender: "UNKNOWN",
-      gender_code: "UNKNOWN",
-      gender_display: "",
+      // В PublicProfileData нет gender или gender_display, ставим UNKNOWN
+      gender: "UNKNOWN" as Gender,
+      gender_display: "Не указано",
       profile_picture_url: profileData.profile_picture_url,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
+    } as UserProfileData,
     therapist_profile: {
-      id: 0,
-      user_profile: 0,
+      id: 0, // Заглушка
       about: profileData.about || "",
       experience_years: profileData.experience_years || 0,
-      skills: profileData.skills,
-      languages: profileData.languages,
-      total_hours_worked: null,
-      display_hours: false,
-      office_location: "",
+      // skills и languages в PublicProfileData - это {id, name}[], что совместимо с Skill[] и Language[]
+      skills: profileData.skills.map((s) => ({
+        ...s,
+        description: null,
+      })) as Skill[], // Добавляем description
+      languages: profileData.languages.map((l) => ({
+        ...l,
+        code: null,
+      })) as Language[], // Добавляем code
+      total_hours_worked: null, // Нет в public API
+      display_hours: false, // Нет в public API
+      office_location: "", // Нет в public API
       video_intro_url: profileData.short_video_url,
-      website_url: "",
-      linkedin_url: "",
-      photos: profileData.photos.map((url) => ({
-        id: 0,
-        therapist_profile: 0,
+      website_url: null, // Нет в public API
+      linkedin_url: null, // Нет в public API
+      // Приводим photos: string[] к TherapistPhotoData[]
+      photos: profileData.photos.map((url, index) => ({
+        id: index, // Заглушка ID
         image: url,
-        caption: "",
-        order: 0,
-      })),
+        caption: null,
+        order: index,
+      })) as TherapistPhotoData[],
       is_verified: profileData.is_verified || false,
       is_subscribed: profileData.is_subscribed || false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      status: "",
-      status_display: "",
-    },
-    client_profile: null,
+    } as TherapistProfilePrivateData,
+    client_profile: undefined,
   };
 
   // Преобразуем публикации в формат Publication

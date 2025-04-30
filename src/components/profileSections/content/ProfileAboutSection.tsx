@@ -1,6 +1,6 @@
 // src/components/profileSections/ProfileAboutSection.tsx
-import React, { useState, useEffect } from "react";
-import { useAuth } from "../../../contexts/AuthContext";
+import React, { useState, useEffect, useContext } from "react";
+import { AuthContext } from "../../../contexts/authContextDefinition";
 import {
   updateTherapistProfile,
   updateClientProfile,
@@ -9,7 +9,7 @@ import ErrorMessage from "../../common/ErrorMessage";
 import EditControls from "../../common/EditControls";
 import ProfileWrapper from "../common/ProfileWrapper";
 import { toast } from "react-toastify";
-import { FullUserData } from "../../../types/user";
+import { FullUserData } from "../../../types/models";
 
 interface ProfileSectionProps {
   userData: FullUserData;
@@ -20,7 +20,10 @@ const ProfileAboutSection: React.FC<ProfileSectionProps> = ({
   userData,
   isEditable,
 }) => {
-  const { updateUserState } = useAuth();
+  const { updateUserState } = useContext(AuthContext) || {};
+  if (!updateUserState) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
   const [isEditing, setIsEditing] = useState(false);
   const [aboutText, setAboutText] = useState("");
   const [initialText, setInitialText] = useState("");

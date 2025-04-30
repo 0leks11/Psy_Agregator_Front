@@ -52,8 +52,8 @@ export interface PublicationData {
 export interface TherapistProfileEditData {
   about: string | null;
   experience_years: number;
-  skills: number[]; // Массив ID
-  languages: number[]; // Массив ID
+  skills: number[]; // Массив ID для отправки
+  languages: number[]; // Массив ID для отправки
   total_hours_worked: number | null;
   display_hours: boolean;
   office_location: string | null;
@@ -64,15 +64,18 @@ export interface TherapistProfileEditData {
   // Добавить другие соцсети если нужно
 }
 
-// Полные данные профиля терапевта для ЛИЧНОГО КАБИНЕТА (включая все поля и объекты фото)
-export interface TherapistProfilePrivateData extends TherapistProfileEditData {
-  id: number; // ID профиля терапевта
+// Полные данные профиля терапевта для ЛИЧНОГО КАБИНЕТА
+// Используем Omit для наследования без конфликтующих полей
+export interface TherapistProfilePrivateData
+  extends Omit<TherapistProfileEditData, "skills" | "languages"> {
+  // Исключаем skills и languages из наследования
+  id: number;
   is_verified: boolean;
   is_subscribed: boolean;
-  photos: TherapistPhotoData[]; // Массив объектов фото
-  // M2M поля могут быть как ID, так и объекты, в зависимости от сериализатора
-  // skills: number[] | Skill[];
-  // languages: number[] | Language[];
+  photos: TherapistPhotoData[];
+  // Явно добавляем skills и languages с правильными типами
+  skills: Skill[];
+  languages: Language[];
 }
 
 // Данные для ПУБЛИЧНОГО отображения профиля терапевта (только читаемые поля)
@@ -171,4 +174,9 @@ export interface ApiTherapistListData {
   last_name: string;
   profile: ApiProfileCardData | null;
   therapist_profile: ApiTherapistProfileCardData | null;
+}
+
+// Добавляю в конец файла новый тип
+export interface ProfilePublicationsSectionProps extends ProfileSectionProps {
+  initialPublications?: Publication[] | null;
 }

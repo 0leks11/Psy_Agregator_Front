@@ -1,7 +1,7 @@
 // src/pages/account/MyProfilePage.tsx
 
 import React from "react";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 import { Link } from "react-router-dom";
 
 // Импорты всех секций
@@ -93,10 +93,14 @@ const MyProfilePage: React.FC = () => {
                 userData={user}
                 isEditable={true}
               />
-              {/* Видео визитка */}
-              <ProfileVideoSection userData={user} isEditable={true} />
-              {/* Фотогалерея */}
-              <ProfilePhotoGallerySection userData={user} isEditable={true} />
+              {/* Видео визитка - передаем конкретный URL, заменяя undefined на null */}
+              <ProfileVideoSection
+                videoUrl={user.therapist_profile?.video_intro_url ?? null}
+              />
+              {/* Фотогалерея - передаем массив фото */}
+              <ProfilePhotoGallerySection
+                photos={user.therapist_profile?.photos || []}
+              />
               {/* Публикации */}
               <ProfilePublicationsSection userData={user} isEditable={true} />
             </>

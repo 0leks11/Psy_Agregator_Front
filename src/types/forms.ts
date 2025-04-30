@@ -1,4 +1,4 @@
-import { UserProfileData } from "./user";
+import { UserProfileData } from "./models";
 
 // Типы для форм
 export interface LoginFormData {
@@ -17,7 +17,7 @@ export interface RegisterFormData {
 export interface ProfileUpdateData {
   first_name: string;
   last_name: string;
-  gender: UserProfileData["gender_code"];
+  gender: UserProfileData["gender"];
 }
 
 export interface TherapistProfileUpdateData {

@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { getTherapists } from "../../services/therapistService";
 import { ApiTherapistListData } from "../../types/api";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import ErrorMessage from "../../components/common/ErrorMessage";
 import TherapistCard from "../../components/therapistList/TherapistCard";
-import { useAuth } from "../../contexts/AuthContext";
+import { AuthContext } from "../../contexts/authContextDefinition";
 
 const TherapistListPage: React.FC = () => {
-  const { user } = useAuth();
+  const authContext = useContext(AuthContext);
+  if (!authContext) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  const { user } = authContext;
   const loggedInUserId = user?.id;
 
   const [allTherapists, setAllTherapists] = useState<ApiTherapistListData[]>(
@@ -15,9 +19,6 @@ const TherapistListPage: React.FC = () => {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [count, setCount] = useState(0);
-  const [nextUrl, setNextUrl] = useState<string | null>(null);
-  const [prevUrl, setPrevUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAndFilterTherapists = async () => {
@@ -40,9 +41,6 @@ const TherapistListPage: React.FC = () => {
           console.log("Filtered Results:", filteredResults);
 
           setAllTherapists(filteredResults);
-          setCount(response.count);
-          setNextUrl(response.next);
-          setPrevUrl(response.previous);
         }
       } catch (err) {
         console.error("Error fetching therapists:", err);

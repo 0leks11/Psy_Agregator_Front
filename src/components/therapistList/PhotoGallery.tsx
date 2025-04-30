@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { TherapistPhotoData } from "../../types/types";
+import React, { useState, useCallback, useEffect } from "react";
+import { TherapistPhotoData } from "../../types/models";
 
 interface PhotoGalleryProps {
   photos: TherapistPhotoData[];
@@ -8,16 +8,47 @@ interface PhotoGalleryProps {
 const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
+  // Оборачиваем в useCallback
+  const closeLightbox = useCallback(() => {
+    setActiveIndex(null);
+  }, []); // Пустой массив зависимостей, т.к. функция не зависит от пропсов или состояния
+
+  // Обработчик для навигации с клавиатуры - ВЫЗЫВАЕМ РАНЬШЕ
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Проверяем activeIndex здесь, чтобы не выполнять лишние действия
+      if (activeIndex === null) return;
+
+      if (e.key === "ArrowRight") {
+        setActiveIndex((prevIndex) =>
+          prevIndex !== null ? (prevIndex + 1) % photos.length : null
+        );
+      } else if (e.key === "ArrowLeft") {
+        setActiveIndex((prevIndex) =>
+          prevIndex !== null
+            ? (prevIndex - 1 + photos.length) % photos.length
+            : null
+        );
+      } else if (e.key === "Escape") {
+        closeLightbox(); // Вызываем функцию закрытия
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+    // Добавили closeLightbox в зависимости, т.к. она используется внутри
+  }, [activeIndex, photos.length, closeLightbox]);
+
+  // Теперь проверка на пустой массив фотографий
   if (photos.length === 0) {
-    return null; // Не отображаем галерею, если нет фотографий
+    return null;
   }
 
   const openLightbox = (index: number) => {
     setActiveIndex(index);
-  };
-
-  const closeLightbox = () => {
-    setActiveIndex(null);
   };
 
   const navigateNext = (e: React.MouseEvent) => {
@@ -31,29 +62,6 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos }) => {
     if (activeIndex === null || photos.length <= 1) return;
     setActiveIndex((activeIndex - 1 + photos.length) % photos.length);
   };
-
-  // Обработчик для навигации с клавиатуры
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (activeIndex === null) return;
-
-      if (e.key === "ArrowRight") {
-        setActiveIndex((activeIndex + 1) % photos.length);
-      } else if (e.key === "ArrowLeft") {
-        setActiveIndex((activeIndex - 1 + photos.length) % photos.length);
-      } else if (e.key === "Escape") {
-        closeLightbox();
-      }
-    };
-
-    if (activeIndex !== null) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [activeIndex, photos.length]);
 
   return (
     <div className="space-y-4">

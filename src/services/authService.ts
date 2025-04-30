@@ -1,5 +1,5 @@
 import api from "./api";
-import { FullUserData } from "../types/user";
+import { FullUserData } from "../types/models";
 
 interface LoginResponse {
   token: string;

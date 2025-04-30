@@ -1,28 +1,20 @@
 // src/components/profileSections/publications/ProfilePublicationsSection.tsx
 import React, { useState, useEffect } from "react";
-import { ProfileSectionProps, Publication } from "../../../types/models";
-import { useAuth } from "../../../contexts/AuthContext";
-// Предположим, есть сервис для публикаций:
 import {
-  getMyPublications,
-  addPublication,
-  deletePublication,
-} from "../../../services/publicationService";
+  Publication,
+  ProfilePublicationsSectionProps,
+} from "../../../types/models";
+import { useAuth } from "../../../hooks/useAuth";
+// Импортируем только то, что используем:
+import { getMyPublications } from "../../../services/publicationService";
 import LoadingSpinner from "../../common/LoadingSpinner";
 import ErrorMessage from "../../common/ErrorMessage";
-import PublicationItem from "../../publications/PublicationItem"; // Новый компонент для ОДНОГО поста
-import PublicationForm from "../../publications/PublicationForm"; // Компонент с формой (переиспользуем или сделаем частью PublicationItem)
+import PublicationItem from "../../publications/PublicationItem"; // Компонент для отображения публикации
+import PublicationForm from "../../publications/PublicationForm"; // Компонент формы для создания/редактирования
 import { PlusCircleIcon } from "@heroicons/react/24/outline";
-import ProfileWrapper from "../common/ProfileWrapper"; // Используем обертку, но без стандартной кнопки edit
 import { toast } from "react-toastify";
 
-// Расширяем интерфейс для поддержки внешних публикаций
-interface ProfilePublicationsSectionProps extends ProfileSectionProps {
-  initialPublications?: Publication[] | null;
-}
-
 const ProfilePublicationsSection: React.FC<ProfilePublicationsSectionProps> = ({
-  userData,
   isEditable,
   initialPublications,
 }) => {
@@ -50,7 +42,7 @@ const ProfilePublicationsSection: React.FC<ProfilePublicationsSectionProps> = ({
           );
           const fetchedPublications = await getMyPublications(loggedInUserId);
           setPublications(fetchedPublications || []);
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error("Error fetching own publications:", err);
           setError("Не удалось загрузить ваши публикации.");
         } finally {

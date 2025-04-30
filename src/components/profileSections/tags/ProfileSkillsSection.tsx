@@ -1,5 +1,5 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "../../../hooks/useAuth";
 import {
   getSkills,
   updateTherapistProfile,
@@ -9,16 +9,7 @@ import ErrorMessage from "../../common/ErrorMessage";
 import EditControls from "../../common/EditControls";
 import ProfileWrapper from "../common/ProfileWrapper";
 import { toast } from "react-toastify";
-
-interface ProfileSectionProps {
-  userData: any; // Используем any, чтобы избежать проблем с типами
-  isEditable: boolean;
-}
-
-interface SkillOption {
-  id: number;
-  name: string;
-}
+import { ProfileSectionProps, Skill } from "../../../types/models";
 
 const ProfileSkillsSection: React.FC<ProfileSectionProps> = ({
   userData,
@@ -26,7 +17,7 @@ const ProfileSkillsSection: React.FC<ProfileSectionProps> = ({
 }) => {
   const { updateUserState } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [availableSkills, setAvailableSkills] = useState<SkillOption[]>([]);
+  const [availableSkills, setAvailableSkills] = useState<Skill[]>([]);
   const [selectedSkillIds, setSelectedSkillIds] = useState<number[]>([]);
   const [initialSkillIds, setInitialSkillIds] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false); // Для операции сохранения
@@ -42,7 +33,7 @@ const ProfileSkillsSection: React.FC<ProfileSectionProps> = ({
       setIsOptionsLoading(true);
       try {
         const skillsData = await getSkills();
-        setAvailableSkills(skillsData.map((s) => ({ id: s.id, name: s.name })));
+        setAvailableSkills(skillsData);
       } catch (err) {
         console.error("Ошибка загрузки навыков:", err);
         setError("Не удалось загрузить список навыков.");
@@ -60,8 +51,10 @@ const ProfileSkillsSection: React.FC<ProfileSectionProps> = ({
   useEffect(() => {
     let currentSkillIds: number[] = [];
     if (isTherapist && userData?.therapist_profile?.skills) {
-      // Предполагаем, что skills - это массив объектов {id, name}
-      currentSkillIds = userData.therapist_profile.skills.map((s: any) => s.id);
+      const therapistSkills = userData.therapist_profile.skills;
+      if (Array.isArray(therapistSkills)) {
+        currentSkillIds = therapistSkills.map((skill) => skill.id);
+      }
     }
     setSelectedSkillIds(currentSkillIds);
     setInitialSkillIds(currentSkillIds);
@@ -104,21 +97,22 @@ const ProfileSkillsSection: React.FC<ProfileSectionProps> = ({
       } else {
         throw new Error("Не удалось обновить профиль.");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       const errMsg =
-        err.response?.data?.detail ||
-        err.response?.data?.skills?.[0] ||
-        err.message ||
+        (
+          err as {
+            response?: { data?: { detail?: string; skills?: string[] } };
+          }
+        )?.response?.data?.detail ||
+        (err as { response?: { data?: { skills?: string[] } } })?.response?.data
+          ?.skills?.[0] ||
+        (err as Error)?.message ||
         "Не удалось сохранить изменения.";
       setError(errMsg);
       toast.error(`Ошибка: ${errMsg}`);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const getSkillNameById = (id: number): string => {
-    return availableSkills.find((s) => s.id === id)?.name || `ID: ${id}`;
   };
 
   // Показываем секцию только для терапевтов

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "../../../hooks/useAuth";
 import { updateTherapistProfile } from "../../../services/profileService";
 import ErrorMessage from "../../common/ErrorMessage";
 import EditControls from "../../common/EditControls";
@@ -8,8 +8,18 @@ import { toast } from "react-toastify";
 // Импортируйте иконки соцсетей (например, из react-icons)
 // import { FaLinkedin, FaGlobe } from 'react-icons/fa';
 
+interface UserData {
+  profile?: {
+    role?: string;
+  };
+  therapist_profile?: {
+    website_url?: string | null;
+    linkedin_url?: string | null;
+  };
+}
+
 interface ProfileSectionProps {
-  userData: any;
+  userData: UserData;
   isEditable: boolean;
 }
 
@@ -80,7 +90,7 @@ const ProfileSocialLinksSection: React.FC<ProfileSectionProps> = ({
             : `https://${url}`;
           new URL(urlWithProtocol);
           return true;
-        } catch (e) {
+        } catch {
           return false;
         }
       };
@@ -122,10 +132,11 @@ const ProfileSocialLinksSection: React.FC<ProfileSectionProps> = ({
       } else {
         throw new Error("Не удалось обновить профиль");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       const errMsg =
-        err.response?.data?.detail ||
-        err.message ||
+        (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail ||
+        (err as Error)?.message ||
         "Не удалось сохранить изменения";
       setError(errMsg);
       toast.error(`Ошибка: ${errMsg}`);
@@ -147,7 +158,7 @@ const ProfileSocialLinksSection: React.FC<ProfileSectionProps> = ({
     try {
       const urlObj = new URL(url.startsWith("http") ? url : `https://${url}`);
       return urlObj.hostname.replace(/^www\./, "");
-    } catch (e) {
+    } catch {
       return url;
     }
   };

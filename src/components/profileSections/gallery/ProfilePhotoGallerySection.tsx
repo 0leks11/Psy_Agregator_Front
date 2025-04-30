@@ -1,5 +1,5 @@
 import React from "react";
-import { TherapistPhotoData } from "../../../types/types";
+import { TherapistPhotoData } from "../../../types/models";
 
 interface Props {
   photos: TherapistPhotoData[];

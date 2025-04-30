@@ -74,7 +74,7 @@ const SubscriptionPage: React.FC = () => {
 
       // Перенаправление на страницу успешной оплаты
       window.location.href = "/payment-success";
-    } catch (err) {
+    } catch {
       setError("Произошла ошибка при оформлении подписки");
     } finally {
       setLoading(false);

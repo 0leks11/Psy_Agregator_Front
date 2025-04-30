@@ -1,11 +1,10 @@
 import React, { useState, useEffect, ChangeEvent, useRef } from "react";
-import { FullUserData } from "../../../types/models"; // Adjust path based on your project structure
-import { useAuth } from "../../../contexts/AuthContext";
+import { FullUserData } from "../../../types/models"; // Исправляем путь импорта
+import { useAuth } from "../../../hooks/useAuth"; // Исправляем путь к хуку
 import {
   updateBaseProfile,
   updateProfilePicture,
 } from "../../../services/profileService";
-import LoadingSpinner from "../../common/LoadingSpinner";
 import ErrorMessage from "../../common/ErrorMessage";
 import EditControls from "../../common/EditControls";
 import { CameraIcon } from "@heroicons/react/24/solid"; // For upload and edit icons
@@ -112,11 +111,12 @@ const ProfileHeaderSection: React.FC<ProfileSectionProps> = ({
 
       setIsEditing(false);
       setAvatarFile(null); // Clear file after successful upload
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error saving header:", err);
       const errMsg =
-        err.response?.data?.detail ||
-        err.message ||
+        (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail ||
+        (err as Error)?.message ||
         "Не удалось сохранить изменения.";
       setError(errMsg);
       toast.error(`Ошибка: ${errMsg}`); // Show error toast

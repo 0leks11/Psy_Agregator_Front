@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import { Publication } from "../../types/models";
 import {
-  PencilIcon,
   TrashIcon,
   EllipsisVerticalIcon,
   ArrowDownIcon,
@@ -13,6 +12,8 @@ import PublicationForm from "./PublicationForm"; // Используем ту ж
 import { deletePublication } from "../../services/publicationService"; // API удаления
 import ErrorMessage from "../common/ErrorMessage";
 import { toast } from "react-toastify";
+import ProfileWrapper from "../profileSections/common/ProfileWrapper";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 interface PublicationItemProps {
   publication: Publication;
@@ -35,7 +36,6 @@ const PublicationItem: React.FC<PublicationItemProps> = ({
   const [showFullContent, setShowFullContent] = useState(false); // Флаг, нужно ли показывать кнопку "Развернуть"
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [isExpandable, setIsExpandable] = useState(false);
 
   const contentRef = React.useRef<HTMLDivElement>(null);
 
@@ -46,11 +46,6 @@ const PublicationItem: React.FC<PublicationItemProps> = ({
       hasContent: !!publication.content,
       contentLength: publication.content?.length,
     });
-
-    if (contentRef.current) {
-      const contentHeight = contentRef.current.scrollHeight;
-      setIsExpandable(contentHeight > 100);
-    }
   }, [publication]);
 
   // Определяем, нужно ли показывать кнопку "Развернуть"
@@ -96,10 +91,11 @@ const PublicationItem: React.FC<PublicationItemProps> = ({
         await deletePublication(publication.id); // Вызываем API
         onPostDeleted(publication.id); // Вызываем колбэк родителя
         // Уведомление об успехе будет в родительском компоненте
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Error deleting publication:", err);
         const errMsg =
-          err.response?.data?.detail || "Не удалось удалить публикацию.";
+          (err as { response?: { data?: { detail?: string } } })?.response?.data
+            ?.detail || "Не удалось удалить публикацию.";
         setDeleteError(errMsg);
         toast.error(`Ошибка: ${errMsg}`);
       } finally {
@@ -124,9 +120,12 @@ const PublicationItem: React.FC<PublicationItemProps> = ({
   );
 
   return (
-    <div className="p-6 relative group/item">
-      {" "}
-      {/* Добавляем group/item для вложенного hover */}
+    <ProfileWrapper
+      title={publication.title || "Публикация"}
+      isEditable={isEditable}
+      isEditing={isEditing}
+      onEditClick={handleEdit}
+    >
       {isEditing ? (
         // --- Режим Редактирования ---
         <PublicationForm
@@ -140,24 +139,10 @@ const PublicationItem: React.FC<PublicationItemProps> = ({
         <>
           {/* Заголовок и Дата */}
           <div className="flex justify-between items-start mb-3">
-            <div>
-              {publication.title && (
-                <h4 className="text-lg font-semibold text-gray-800 mb-1">
-                  {publication.title}
-                </h4>
-              )}
-              <p className="text-xs text-gray-400">{formattedDate}</p>
-            </div>
-            {/* Кнопки управления (карандаш и ...) */}
+            <p className="text-xs text-gray-400">{formattedDate}</p>
+            {/* Кнопки управления (... меню) убираем кнопку редактирования, т.к. она теперь в ProfileWrapper */}
             {isEditable && (
               <div className="absolute top-4 right-4 flex space-x-1 opacity-0 group-hover/item:opacity-100 focus-within:opacity-100 transition-opacity duration-200">
-                <button
-                  onClick={handleEdit}
-                  className="p-1 text-gray-400 hover:text-blue-600"
-                  aria-label="Редактировать публикацию"
-                >
-                  <PencilIcon className="h-5 w-5" />
-                </button>
                 <Menu as="div" className="relative inline-block text-left">
                   <Menu.Button
                     className="p-1 text-gray-400 hover:text-red-600"
@@ -251,7 +236,7 @@ const PublicationItem: React.FC<PublicationItemProps> = ({
           )}
         </>
       )}
-    </div>
+    </ProfileWrapper>
   );
 };
 

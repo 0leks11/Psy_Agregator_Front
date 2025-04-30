@@ -1,6 +1,6 @@
-import React, { useState, FormEvent } from "react";
+import React, { useState, FormEvent, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
+import { AuthContext } from "../../contexts/authContextDefinition";
 
 interface RegisterFormData {
   email: string;
@@ -14,7 +14,11 @@ interface RegisterFormData {
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const authContext = useContext(AuthContext);
+  if (!authContext) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  const { register } = authContext;
   const [formData, setFormData] = useState<RegisterFormData>({
     email: "",
     password: "",

@@ -1,5 +1,5 @@
 import React from "react";
-import { FullUserData } from "../../../types/user";
+import { FullUserData } from "../../../types/models";
 import ProfileWrapper from "../common/ProfileWrapper";
 
 interface ProfileSectionProps {
@@ -11,7 +11,13 @@ const ProfileSubscriptionStatusSection: React.FC<ProfileSectionProps> = ({
   userData,
   isEditable,
 }) => {
-  const status = userData.therapist_profile?.status_display || "Не указан";
+  const isSubscribed = userData.therapist_profile?.is_subscribed;
+  const status =
+    isSubscribed === true
+      ? "Активна"
+      : isSubscribed === false
+      ? "Неактивна"
+      : "Не указан";
 
   return (
     <ProfileWrapper

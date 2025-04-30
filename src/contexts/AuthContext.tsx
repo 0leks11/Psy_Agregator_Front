@@ -1,12 +1,4 @@
-import React, {
-  createContext,
-  useState,
-  useContext,
-  useEffect,
-  useCallback,
-  ReactNode,
-} from "react";
-import api from "../services/api"; // Your configured axios instance
+import React, { useState, useEffect, useCallback, ReactNode } from "react";
 import {
   loginUser,
   registerClient,
@@ -14,28 +6,8 @@ import {
 } from "../services/authService";
 import { getMyProfile } from "../services/profileService";
 import LoadingSpinner from "../components/common/LoadingSpinner";
-import { FullUserData } from "../types/user";
-
-interface AuthContextType {
-  user: FullUserData | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  loading: boolean;
-  error: string | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
-  register: (userData: {
-    email: string;
-    password: string;
-    first_name: string;
-    last_name: string;
-    role: "CLIENT" | "THERAPIST";
-    invite_code?: string;
-  }) => Promise<boolean>;
-  updateUserState: (userData: FullUserData) => void;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { FullUserData } from "../types/models";
+import { AuthContext, AuthContextType } from "./authContextDefinition";
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
@@ -113,7 +85,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     password: string;
     first_name: string;
     last_name: string;
-    role: "CLIENT" | "THERAPIST";
+    role: "CLIENT" | "THERAPIST" | "ADMIN";
     invite_code?: string;
   }): Promise<boolean> => {
     try {
@@ -123,8 +95,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           throw new Error("Invite code is required for therapist registration");
         }
         data = await registerTherapist(userData);
-      } else {
+      } else if (userData.role === "CLIENT") {
         data = await registerClient(userData);
+      } else {
+        console.error(
+          "AuthProvider: Регистрация для роли ADMIN не поддерживается."
+        );
+        return false;
       }
 
       if (data && data.token && data.user) {
@@ -158,13 +135,4 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       {loading ? <LoadingSpinner /> : children}
     </AuthContext.Provider>
   );
-};
-
-// Custom Hook to use Auth context easily
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
 };

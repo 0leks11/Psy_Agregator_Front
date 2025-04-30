@@ -13,6 +13,8 @@ import PublicationForm from "../publications/PublicationForm"; // Использ
 import { deletePublication } from "../../services/publicationService"; // API удаления
 import ErrorMessage from "../common/ErrorMessage";
 import { toast } from "react-toastify";
+import LoadingSpinner from "../common/LoadingSpinner";
+import { AxiosError } from "axios"; // Импортируем AxiosError
 
 interface PublicationItemProps {
   publication: Publication;
@@ -75,10 +77,16 @@ const PublicationItem: React.FC<PublicationItemProps> = ({
         await deletePublication(publication.id); // Вызываем API
         onPostDeleted(publication.id); // Вызываем колбэк родителя
         // Уведомление об успехе будет в родительском компоненте
-      } catch (err: any) {
+      } catch (err) {
         console.error("Error deleting publication:", err);
-        const errMsg =
-          err.response?.data?.detail || "Не удалось удалить публикацию.";
+        let errMsg = "Не удалось удалить публикацию.";
+        // Проверяем, является ли ошибка AxiosError и есть ли нужное поле
+        if (err instanceof AxiosError && err.response?.data?.detail) {
+          errMsg = err.response.data.detail;
+        } else if (err instanceof Error) {
+          // Общий случай для других ошибок
+          errMsg = err.message;
+        }
         setDeleteError(errMsg);
         toast.error(`Ошибка: ${errMsg}`);
       } finally {

@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useContext } from "react";
 import { NavLink } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
+import { AuthContext } from "../../contexts/authContextDefinition";
 import {
   PencilSquareIcon,
   MagnifyingGlassIcon,
@@ -20,7 +20,14 @@ const inactiveLinkClasses =
   "text-gray-600 hover:bg-gray-100 hover:text-gray-900";
 
 const DashboardSidebar: React.FC = () => {
-  const { user, logout } = useAuth();
+  const authContext = useContext(AuthContext);
+  if (!authContext) {
+    // В сайдбаре лучше не выбрасывать ошибку, а вернуть null или индикатор загрузки,
+    // т.к. он может рендериться до полной инициализации AuthProvider.
+    // Возвращаем null, если контекст еще не доступен.
+    return null;
+  }
+  const { user, logout } = authContext;
   const isTherapist = user?.profile?.role === "THERAPIST";
   const isClient = user?.profile?.role === "CLIENT";
 

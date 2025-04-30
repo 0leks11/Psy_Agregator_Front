@@ -7,16 +7,24 @@ import {
 import {
   TherapistPublicProfileData,
   TherapistPhotoData,
+  Skill,
+  Language,
 } from "../types/models";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ErrorMessage from "../components/common/ErrorMessage";
 import PhotoGallery from "../components/therapistList/PhotoGallery";
+import { AxiosError } from "axios";
+
+type TherapistDetailState =
+  | (Omit<TherapistPublicProfileData, "skills" | "languages" | "photos"> & {
+      skills: Skill[];
+      languages: Language[];
+    })
+  | null;
 
 const TherapistDetailPage: React.FC = () => {
   const { therapistId } = useParams<{ therapistId: string }>();
-  const [therapist, setTherapist] = useState<TherapistPublicProfileData | null>(
-    null
-  );
+  const [therapist, setTherapist] = useState<TherapistDetailState>(null);
   const [photos, setPhotos] = useState<TherapistPhotoData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -35,15 +43,17 @@ const TherapistDetailPage: React.FC = () => {
         const data = await getTherapistById(parseInt(therapistId, 10));
         setTherapist(data);
 
-        // Загружаем фотографии психолога
         const photosData = await getTherapistPhotos(parseInt(therapistId, 10));
         setPhotos(photosData);
-      } catch (err: any) {
-        setError(
-          err.response?.data?.detail ||
-            "Не удалось загрузить информацию о специалисте."
-        );
+      } catch (err) {
         console.error(err);
+        let errMsg = "Не удалось загрузить информацию о специалисте.";
+        if (err instanceof AxiosError && err.response?.data?.detail) {
+          errMsg = err.response.data.detail;
+        } else if (err instanceof Error) {
+          errMsg = err.message;
+        }
+        setError(errMsg);
       } finally {
         setLoading(false);
       }
@@ -61,7 +71,6 @@ const TherapistDetailPage: React.FC = () => {
   if (error) return <ErrorMessage message={error} />;
   if (!therapist) return <ErrorMessage message="Специалист не найден." />;
 
-  // Функция для форматирования URL (добавляет https:// если его нет)
   const formatUrl = (url: string | null): string => {
     if (!url) return "";
     return url.startsWith("http") ? url : `https://${url}`;
@@ -70,7 +79,6 @@ const TherapistDetailPage: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="bg-white shadow-lg rounded-lg p-6 md:p-8">
-        {/* Заголовок и основная информация */}
         <div className="flex flex-col md:flex-row items-center md:items-start mb-6 md:mb-8">
           <img
             src={therapist.profile.profile_picture_url || defaultImage}
@@ -94,7 +102,6 @@ const TherapistDetailPage: React.FC = () => {
               Формат/Местоположение: {therapist.office_location || "Не указано"}
             </p>
 
-            {/* Социальные сети и контакты */}
             <div className="mt-3 flex flex-wrap justify-center md:justify-start space-x-3">
               {therapist.website_url && (
                 <a
@@ -120,7 +127,6 @@ const TherapistDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Видео-визитка */}
         {therapist.video_intro_url && (
           <div className="mb-6 pb-6 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-700 mb-3">
@@ -139,7 +145,6 @@ const TherapistDetailPage: React.FC = () => {
           </div>
         )}
 
-        {/* О себе */}
         {therapist.about && (
           <div className="mb-6 pb-6 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-700 mb-3">О себе</h2>
@@ -149,50 +154,46 @@ const TherapistDetailPage: React.FC = () => {
           </div>
         )}
 
-        {/* Галерея фотографий */}
-        {therapist.photos && therapist.photos.length > 0 && (
+        {photos && photos.length > 0 && (
           <div className="mb-6 pb-6 border-b border-gray-200">
-            <PhotoGallery photos={therapist.photos} />
+            <PhotoGallery photos={photos} />
           </div>
         )}
 
-        {/* Специализация */}
         {therapist.skills && therapist.skills.length > 0 && (
           <div className="mb-6 pb-6 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-700 mb-3">
               Специализация
             </h2>
             <div className="flex flex-wrap gap-2">
-              {therapist.skills.map((skill, index) => (
+              {therapist.skills.map((skill: Skill) => (
                 <span
-                  key={index}
+                  key={skill.id}
                   className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
                 >
-                  {skill}
+                  {skill.name}
                 </span>
               ))}
             </div>
           </div>
         )}
 
-        {/* Языки */}
         {therapist.languages && therapist.languages.length > 0 && (
           <div className="mb-6 pb-6 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-700 mb-3">Языки</h2>
             <div className="flex flex-wrap gap-2">
-              {therapist.languages.map((lang, index) => (
+              {therapist.languages.map((lang: Language) => (
                 <span
-                  key={index}
+                  key={lang.id}
                   className="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full"
                 >
-                  {lang}
+                  {lang.name}
                 </span>
               ))}
             </div>
           </div>
         )}
 
-        {/* Часы практики */}
         {therapist.total_hours_worked !== null && (
           <div className="mb-6 pb-6 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-700 mb-3">
@@ -207,7 +208,6 @@ const TherapistDetailPage: React.FC = () => {
           </div>
         )}
 
-        {/* Контактная информация */}
         <div className="mt-8">
           <h2 className="text-xl font-semibold text-gray-700 mb-3">
             Контактная информация

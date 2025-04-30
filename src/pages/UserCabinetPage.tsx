@@ -1,7 +1,7 @@
 import React from "react";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import { Link } from "react-router-dom";
-import { FullUserData } from "../types/user";
+import { FullUserData } from "../types/models";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import { API_URL, DEFAULT_AVATAR_URL, FALLBACK_AVATAR } from "../constants";
@@ -40,7 +40,7 @@ const UserCabinetPage: React.FC = () => {
         <div className="bg-white shadow-lg rounded-lg p-6">
           <div className="flex items-center mb-6">
             <img
-              src={typedUser.profile?.profile_picture_url}
+              src={typedUser.profile?.profile_picture_url ?? backupAvatarUrl}
               alt={`${typedUser.first_name} ${typedUser.last_name}`}
               className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
               onError={(e) => {
@@ -61,12 +61,12 @@ const UserCabinetPage: React.FC = () => {
           </div>
 
           <div className="space-y-4">
-            {typedUser.profile?.gender_code &&
-              typedUser.profile.gender_code !== "UNKNOWN" && (
+            {typedUser.profile?.gender &&
+              typedUser.profile.gender !== "UNKNOWN" && (
                 <div className="flex items-center">
                   <span className="text-gray-600 w-24">Пол:</span>
                   <span className="text-gray-800">
-                    {typedUser.profile.gender}
+                    {typedUser.profile.gender_display}
                   </span>
                 </div>
               )}
@@ -89,14 +89,16 @@ const UserCabinetPage: React.FC = () => {
                     Интересующие темы
                   </h3>
                   <div className="flex flex-wrap gap-2">
-                    {typedUser.client_profile.interested_topics.map((topic) => (
-                      <span
-                        key={topic.id}
-                        className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
-                      >
-                        {topic.name}
-                      </span>
-                    ))}
+                    {typedUser.client_profile.interested_topics.map(
+                      (topicId: number) => (
+                        <span
+                          key={topicId}
+                          className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
+                        >
+                          {`Тема ID: ${topicId}`}
+                        </span>
+                      )
+                    )}
                   </div>
                 </div>
               )}

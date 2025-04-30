@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "../../../hooks/useAuth";
 import { updateBaseProfile } from "../../../services/profileService";
 import ErrorMessage from "../../common/ErrorMessage";
 import EditControls from "../../common/EditControls";
 import ProfileWrapper from "../common/ProfileWrapper";
 import { toast } from "react-toastify";
-import { PencilIcon } from "@heroicons/react/24/outline";
 import { GENDER_OPTIONS } from "../../../types/user";
-interface ProfileSectionProps {
-  userData: any;
-  isEditable: boolean;
-}
+import { ProfileSectionProps } from "../../../types/models";
 
 const ProfileGenderSection: React.FC<ProfileSectionProps> = ({
   userData,
@@ -28,7 +24,7 @@ const ProfileGenderSection: React.FC<ProfileSectionProps> = ({
   // Загружаем текущее значение из профиля
   useEffect(() => {
     if (userData?.profile) {
-      const genderCode = userData.profile.gender_code || "UNKNOWN";
+      const genderCode = userData.profile.gender || "UNKNOWN";
       setGender(genderCode);
       setInitialGender(genderCode);
     }
@@ -67,10 +63,11 @@ const ProfileGenderSection: React.FC<ProfileSectionProps> = ({
       } else {
         throw new Error("Не удалось обновить профиль");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       const errMsg =
-        err.response?.data?.detail ||
-        err.message ||
+        (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail ||
+        (err as Error)?.message ||
         "Не удалось сохранить изменения";
       setError(errMsg);
       toast.error(`Ошибка: ${errMsg}`);

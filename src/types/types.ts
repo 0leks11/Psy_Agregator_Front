@@ -1,78 +1,10 @@
-// Типы для пользователя и профиля
-export interface UserProfileData {
-  id: number;
-  role: "CLIENT" | "THERAPIST" | "ADMIN";
-  gender: string;
-  gender_code: "MALE" | "FEMALE" | "UNKNOWN";
-  gender_display: string;
-  profile_picture_url: string | null;
-  created_at: string;
-  updated_at: string;
-}
+import { BaseUserData, TherapistPhotoData } from "./models"; // Добавляем TherapistPhotoData
 
-export interface TherapistProfileData {
-  id: number;
-  user_profile: number;
-  about: string;
-  experience_years: number;
-  skills: string[];
-  languages: string[];
-  total_hours_worked: number | null;
-  display_hours: boolean;
-  office_location: string;
-  is_verified: boolean;
-  is_subscribed: boolean;
-  created_at: string;
-  updated_at: string;
-  video_intro_url: string | null;
-  website_url: string | null;
-  linkedin_url: string | null;
-  photos: TherapistPhotoData[];
-  status: string | null;
-  status_display: string | null;
-}
+// Удаляем дубликаты UserProfileData, TherapistProfileData, ClientProfileData, FullUserData, SkillData
+// Оставляем только специфичные для types.ts типы, если они есть,
+// и те, что связаны с API и компонентами (Error, Loading, AuthContext, ProtectedRoute)
 
-export interface ClientProfileData {
-  id: number;
-  user_profile: number;
-  request_details: string | null;
-  interested_topics: Array<{ id: number; name: string }>;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface FullUserData extends BaseUserData {
-  email: string;
-  role: "CLIENT" | "THERAPIST" | "ADMIN";
-  created_at: string;
-  updated_at: string;
-  profile: UserProfileData;
-  therapist_profile?: TherapistProfilePrivateData;
-  client_profile?: ClientProfileData;
-}
-
-// Типы для навыков и языков
-export interface SkillData {
-  id: number;
-  name: string;
-  description?: string | null;
-}
-
-export interface LanguageData {
-  id: number;
-  name: string;
-  code?: string | null;
-}
-
-// Новые типы для фотографий и публикаций
-export interface TherapistPhotoData {
-  id: number;
-  therapist_profile: number;
-  image: string;
-  caption: string;
-  order: number;
-}
-
+// Новые типы для фотографий и публикаций (Перенести в models.ts?)
 export interface PublicationData {
   id: number;
   author: number | BaseUserData;
@@ -84,15 +16,7 @@ export interface PublicationData {
   updated_at: string;
 }
 
-// Опции для выбора пола
-export const GENDER_OPTIONS: {
-  value: UserProfileData["gender_code"];
-  label: string;
-}[] = [
-  { value: "MALE", label: "Мужчина" },
-  { value: "FEMALE", label: "Женщина" },
-  { value: "UNKNOWN", label: "Не указан" },
-];
+// Опции для выбора пола УДАЛЕНЫ, так как есть в user.ts
 
 // Типы для API ответов
 export interface ApiResponse<T> {
@@ -119,13 +43,14 @@ export interface LoadingSpinnerProps {
 }
 
 // Типы для контекста аутентификации
+// Перенести AuthContextType в contexts/AuthContext.tsx или отдельный types/auth.ts?
 export interface AuthContextType {
-  user: FullUserData | null;
+  user: import("./models").FullUserData | null; // Используем тип из models
   loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  updateUserState: (userData: FullUserData) => void;
+  updateUserState: (userData: import("./models").FullUserData) => void;
 }
 
 // Типы для защищенных маршрутов
@@ -134,17 +59,11 @@ export interface ProtectedRouteProps {
   requiredRole?: "CLIENT" | "THERAPIST";
 }
 
-export interface BaseUserData {
-  id: number;
-  public_id: string;
-  first_name: string;
-  last_name: string;
-}
-
+// Типы для чтения данных (перенести в models?)
 export interface TherapistProfileReadData {
   id: number;
   user: BaseUserData;
-  profile: UserProfileData;
+  profile: import("./models").UserProfileData; // Используем тип из models
   about: string | null;
   experience_years: number;
   is_verified: boolean;
@@ -164,17 +83,18 @@ export interface TherapistProfileReadData {
 export interface ClientProfileReadData {
   id: number;
   user: BaseUserData;
-  profile: UserProfileData;
+  profile: import("./models").UserProfileData; // Используем тип из models
   request_details: string | null;
   interested_topics: Array<{ id: number; name: string }>;
   created_at: string;
   updated_at: string;
 }
 
+// Типы для публичных данных терапевта
 export interface TherapistPublicData {
   id: number;
   user: BaseUserData;
-  profile: UserProfileData;
+  profile: import("./models").UserProfileData; // Используем тип из models
   about: string | null;
   experience_years: number;
   skills: string[];
@@ -189,9 +109,10 @@ export interface TherapistPublicData {
   photos: TherapistPhotoData[];
 }
 
+// Типы для аутентификации
 export interface AuthResponse {
   token: string;
-  user: FullUserData;
+  user: import("./models").FullUserData; // Используем тип из models
 }
 
 export interface LoginCredentials {
@@ -208,26 +129,26 @@ export interface RegisterCredentials {
   invite_code?: string;
 }
 
+// Типы для обновления данных (перенести в models?)
 export interface ProfileUpdateData {
   first_name?: string;
   last_name?: string;
-  gender?: string;
+  gender?: string; // Здесь может быть string, а на бэке преобразуется
   profile_picture?: File;
   about?: string;
   experience_years?: number;
-  skills?: number[];
-  languages?: number[];
+  skills?: number[]; // ID
+  languages?: number[]; // ID
   total_hours_worked?: number | null;
   display_hours?: boolean;
   office_location?: string;
   request_details?: string;
-  interested_topics?: number[];
+  interested_topics?: number[]; // ID
   video_intro_url?: string | null;
   website_url?: string | null;
   linkedin_url?: string | null;
 }
 
-// Новые типы для обновления сервисов
 export interface TherapistProfileUpdateData {
   about?: string;
   experience_years?: number;

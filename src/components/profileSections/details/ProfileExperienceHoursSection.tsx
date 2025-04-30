@@ -1,5 +1,5 @@
-import React, { useState, useEffect, ChangeEvent } from "react";
-import { useAuth } from "../../../contexts/AuthContext";
+import React, { useState, useEffect, ChangeEvent, useContext } from "react";
+import { AuthContext } from "../../../contexts/authContextDefinition";
 import { updateTherapistProfile } from "../../../services/profileService";
 import ErrorMessage from "../../common/ErrorMessage";
 import EditControls from "../../common/EditControls";
@@ -11,7 +11,10 @@ const ProfileExperienceHoursSection: React.FC<ProfileSectionProps> = ({
   userData,
   isEditable,
 }) => {
-  const { updateUserState } = useAuth();
+  const { updateUserState } = useContext(AuthContext) || {};
+  if (!updateUserState) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

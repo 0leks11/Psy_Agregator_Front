@@ -1,5 +1,5 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "../../../hooks/useAuth";
 import {
   getLanguages,
   updateTherapistProfile,
@@ -9,16 +9,7 @@ import ErrorMessage from "../../common/ErrorMessage";
 import EditControls from "../../common/EditControls";
 import ProfileWrapper from "../common/ProfileWrapper";
 import { toast } from "react-toastify";
-
-interface ProfileSectionProps {
-  userData: any; // Используем any, чтобы избежать проблем с типами
-  isEditable: boolean;
-}
-
-interface LanguageOption {
-  id: number;
-  name: string;
-}
+import { ProfileSectionProps, Language } from "../../../types/models";
 
 const ProfileLanguagesSection: React.FC<ProfileSectionProps> = ({
   userData,
@@ -26,9 +17,7 @@ const ProfileLanguagesSection: React.FC<ProfileSectionProps> = ({
 }) => {
   const { updateUserState } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [availableLanguages, setAvailableLanguages] = useState<
-    LanguageOption[]
-  >([]);
+  const [availableLanguages, setAvailableLanguages] = useState<Language[]>([]);
   const [selectedLanguageIds, setSelectedLanguageIds] = useState<number[]>([]);
   const [initialLanguageIds, setInitialLanguageIds] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false); // Для операции сохранения
@@ -44,6 +33,7 @@ const ProfileLanguagesSection: React.FC<ProfileSectionProps> = ({
       setIsOptionsLoading(true);
       try {
         const languagesData = await getLanguages();
+        // Используем тип Language
         setAvailableLanguages(
           languagesData.map((l) => ({ id: l.id, name: l.name }))
         );
@@ -65,10 +55,11 @@ const ProfileLanguagesSection: React.FC<ProfileSectionProps> = ({
   useEffect(() => {
     let currentLanguageIds: number[] = [];
     if (isTherapist && userData?.therapist_profile?.languages) {
-      // Предполагаем, что languages - это массив объектов {id, name}
-      currentLanguageIds = userData.therapist_profile.languages.map(
-        (l: any) => l.id
-      );
+      // Тип languages теперь Language[], можно напрямую мапить
+      const therapistLanguages = userData.therapist_profile.languages;
+      if (Array.isArray(therapistLanguages)) {
+        currentLanguageIds = therapistLanguages.map((language) => language.id);
+      }
     }
     setSelectedLanguageIds(currentLanguageIds);
     setInitialLanguageIds(currentLanguageIds);
@@ -111,21 +102,22 @@ const ProfileLanguagesSection: React.FC<ProfileSectionProps> = ({
       } else {
         throw new Error("Не удалось обновить профиль.");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       const errMsg =
-        err.response?.data?.detail ||
-        err.response?.data?.languages?.[0] ||
-        err.message ||
+        (
+          err as {
+            response?: { data?: { detail?: string; languages?: string[] } };
+          }
+        )?.response?.data?.detail ||
+        (err as { response?: { data?: { languages?: string[] } } })?.response
+          ?.data?.languages?.[0] ||
+        (err as Error)?.message ||
         "Не удалось сохранить изменения.";
       setError(errMsg);
       toast.error(`Ошибка: ${errMsg}`);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const getLanguageNameById = (id: number): string => {
-    return availableLanguages.find((l) => l.id === id)?.name || `ID: ${id}`;
   };
 
   // Показываем секцию только для терапевтов

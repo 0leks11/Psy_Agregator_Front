@@ -1,11 +1,17 @@
-import React from "react";
-import { useAuth } from "../../contexts/AuthContext";
+import React, { useContext } from "react";
+import { AuthContext } from "../../contexts/authContextDefinition";
 import LoadingSpinner from "../common/LoadingSpinner";
 import ErrorMessage from "../common/ErrorMessage";
-import { FullUserData } from "../../types/user";
+import { FullUserData, Skill, Language } from "../../types/models";
 
 const MyProfileDisplay: React.FC = () => {
-  const { user, loading } = useAuth();
+  const authContext = useContext(AuthContext);
+
+  if (!authContext) {
+    return <LoadingSpinner />;
+  }
+
+  const { user, loading } = authContext;
   const typedUser = user as FullUserData | null;
 
   if (loading) {
@@ -89,14 +95,16 @@ const MyProfileDisplay: React.FC = () => {
                       Навыки
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {typedUser.therapist_profile.skills.map((skill) => (
-                        <span
-                          key={skill.id}
-                          className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
-                        >
-                          {skill.name}
-                        </span>
-                      ))}
+                      {typedUser.therapist_profile.skills.map(
+                        (skill: Skill) => (
+                          <span
+                            key={skill.id}
+                            className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
+                          >
+                            {skill.name}
+                          </span>
+                        )
+                      )}
                     </div>
                   </div>
                 )}
@@ -108,14 +116,16 @@ const MyProfileDisplay: React.FC = () => {
                       Языки
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {typedUser.therapist_profile.languages.map((language) => (
-                        <span
-                          key={language.id}
-                          className="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full"
-                        >
-                          {language.name}
-                        </span>
-                      ))}
+                      {typedUser.therapist_profile.languages.map(
+                        (language: Language) => (
+                          <span
+                            key={language.id}
+                            className="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full"
+                          >
+                            {language.name}
+                          </span>
+                        )
+                      )}
                     </div>
                   </div>
                 )}
@@ -203,8 +213,8 @@ const MyProfileDisplay: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              {typedUser.profile?.gender_code &&
-                typedUser.profile.gender_code !== "UNKNOWN" && (
+              {typedUser.profile?.gender &&
+                typedUser.profile.gender !== "UNKNOWN" && (
                   <div className="flex items-center">
                     <span className="text-gray-600 w-24">Пол:</span>
                     <span className="text-gray-800">
@@ -232,12 +242,12 @@ const MyProfileDisplay: React.FC = () => {
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {typedUser.client_profile.interested_topics.map(
-                        (topic) => (
+                        (topicId: number) => (
                           <span
-                            key={topic.id}
+                            key={topicId}
                             className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
                           >
-                            {topic.name}
+                            {`Тема ID: ${topicId}`}
                           </span>
                         )
                       )}

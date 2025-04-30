@@ -1,5 +1,3 @@
-// src/components/therapistList/TherapistCard.tsx (или где он у вас сейчас)
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { ApiTherapistListData } from "../../types/api";
@@ -21,7 +19,7 @@ const TherapistCard: React.FC<TherapistCardProps> = ({ therapist }) => {
       <div className="p-4">
         <div className="flex items-center space-x-4">
           <img
-            src={avatarUrl}
+            src={avatarUrl!}
             alt={`${therapist.first_name} ${therapist.last_name}`}
             className="w-16 h-16 rounded-full object-cover"
             onError={(e) => {
