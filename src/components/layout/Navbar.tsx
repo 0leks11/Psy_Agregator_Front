@@ -39,7 +39,15 @@ const Navbar: React.FC = () => {
               <>
                 <li className="nav-item">
                   <span className="nav-link">
-                    {user?.role === "therapist" ? "Психолог" : "Пользователь"}
+                    {
+                      user?.role === "ADMIN"
+                        ? "Администратор"
+                        : user?.role === "THERAPIST"
+                        ? "Психолог"
+                        : user?.role === "CLIENT"
+                        ? "Клиент"
+                        : "Пользователь" // Запасной вариант
+                    }
                   </span>
                 </li>
                 <li className="nav-item">

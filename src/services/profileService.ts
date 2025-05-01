@@ -1,23 +1,26 @@
 import api from "./api";
 import {
-  SkillData,
-  LanguageData,
-  FullUserData,
   ProfileUpdateData,
   TherapistProfileUpdateData,
   ClientProfileUpdateData,
 } from "../types/types";
-import { TherapistPhotoData, PublicationData } from "../types/models";
+import {
+  TherapistPhotoData,
+  PublicationData,
+  Skill,
+  Language,
+  FullUserData,
+} from "../types/models";
 import { PublicProfileData } from "../types/api";
 import { AxiosError } from "axios";
 
-export const getSkills = async (): Promise<SkillData[]> => {
-  const response = await api.get<SkillData[]>("/api/skills/");
+export const getSkills = async (): Promise<Skill[]> => {
+  const response = await api.get<Skill[]>("/api/skills/");
   return response.data;
 };
 
-export const getLanguages = async (): Promise<LanguageData[]> => {
-  const response = await api.get<LanguageData[]>("/api/languages/");
+export const getLanguages = async (): Promise<Language[]> => {
+  const response = await api.get<Language[]>("/api/languages/");
   return response.data;
 };
 
@@ -75,7 +78,6 @@ export const getMyProfile = async (): Promise<FullUserData> => {
 export const addMyPhoto = async (
   formData: FormData
 ): Promise<TherapistPhotoData> => {
-  // formData должен содержать 'image' и опционально 'caption', 'order'
   try {
     const response = await api.post<TherapistPhotoData>(
       "/api/profile/photos/",
@@ -85,9 +87,19 @@ export const addMyPhoto = async (
       }
     );
     return response.data;
-  } catch (error: any) {
-    console.error("Add photo error:", error.response?.data || error.message);
-    throw error;
+  } catch (error) {
+    const errMsgPrefix = "Add photo error";
+    let specificError = "";
+    if (error instanceof AxiosError && error.response?.data?.detail) {
+      specificError = error.response.data.detail;
+    } else if (error instanceof Error) {
+      specificError = error.message;
+    }
+    const errMsg = `${errMsgPrefix}: ${
+      specificError || "Не удалось добавить фото"
+    }`;
+    console.error(errMsg, error);
+    throw new Error(errMsg);
   }
 };
 
@@ -101,24 +113,38 @@ export const updateMyPhoto = async (
       data
     );
     return response.data;
-  } catch (error: any) {
-    console.error(
-      `Update photo ${photoId} error:`,
-      error.response?.data || error.message
-    );
-    throw error;
+  } catch (error) {
+    const errMsgPrefix = `Update photo ${photoId} error`;
+    let specificError = "";
+    if (error instanceof AxiosError && error.response?.data?.detail) {
+      specificError = error.response.data.detail;
+    } else if (error instanceof Error) {
+      specificError = error.message;
+    }
+    const errMsg = `${errMsgPrefix}: ${
+      specificError || "Не удалось обновить фото"
+    }`;
+    console.error(errMsg, error);
+    throw new Error(errMsg);
   }
 };
 
 export const deleteMyPhoto = async (photoId: number): Promise<void> => {
   try {
     await api.delete(`/api/profile/photos/${photoId}/`);
-  } catch (error: any) {
-    console.error(
-      `Delete photo ${photoId} error:`,
-      error.response?.data || error.message
-    );
-    throw error;
+  } catch (error) {
+    const errMsgPrefix = `Delete photo ${photoId} error`;
+    let specificError = "";
+    if (error instanceof AxiosError && error.response?.data?.detail) {
+      specificError = error.response.data.detail;
+    } else if (error instanceof Error) {
+      specificError = error.message;
+    }
+    const errMsg = `${errMsgPrefix}: ${
+      specificError || "Не удалось удалить фото"
+    }`;
+    console.error(errMsg, error);
+    throw new Error(errMsg);
   }
 };
 
@@ -128,36 +154,48 @@ export const getMyPublications = async (): Promise<PublicationData[]> => {
     const response = await api.get<
       { results: PublicationData[] } | PublicationData[]
     >("/api/profile/publications/");
-    // Проверяем, есть ли свойство results (пагинированный ответ) или сразу массив
     return "results" in response.data ? response.data.results : response.data;
-  } catch (error: any) {
-    console.error(
-      "Get my publications error:",
-      error.response?.data || error.message
-    );
-    throw error;
+  } catch (error) {
+    const errMsgPrefix = "Get my publications error";
+    let specificError = "";
+    if (error instanceof AxiosError && error.response?.data?.detail) {
+      specificError = error.response.data.detail;
+    } else if (error instanceof Error) {
+      specificError = error.message;
+    }
+    const errMsg = `${errMsgPrefix}: ${
+      specificError || "Не удалось получить публикации"
+    }`;
+    console.error(errMsg, error);
+    throw new Error(errMsg);
   }
 };
 
 export const createMyPublication = async (
   formData: FormData
 ): Promise<PublicationData> => {
-  // formData: title, content, is_published, featured_image (optional)
   try {
     const response = await api.post<PublicationData>(
       "/api/profile/publications/",
       formData,
       {
-        headers: { "Content-Type": "multipart/form-data" }, // Если есть картинка
+        headers: { "Content-Type": "multipart/form-data" },
       }
     );
     return response.data;
-  } catch (error: any) {
-    console.error(
-      "Create publication error:",
-      error.response?.data || error.message
-    );
-    throw error;
+  } catch (error) {
+    const errMsgPrefix = "Create publication error";
+    let specificError = "";
+    if (error instanceof AxiosError && error.response?.data?.detail) {
+      specificError = error.response.data.detail;
+    } else if (error instanceof Error) {
+      specificError = error.message;
+    }
+    const errMsg = `${errMsgPrefix}: ${
+      specificError || "Не удалось создать публикацию"
+    }`;
+    console.error(errMsg, error);
+    throw new Error(errMsg);
   }
 };
 
@@ -166,8 +204,6 @@ export const updateMyPublication = async (
   formData: FormData
 ): Promise<PublicationData> => {
   try {
-    // Используем POST с _method=PATCH если бэкенд не поддерживает PATCH для multipart
-    // Или отправляем JSON если картинка не меняется
     const response = await api.patch<PublicationData>(
       `/api/profile/publications/${pubId}/`,
       formData,
@@ -176,24 +212,38 @@ export const updateMyPublication = async (
       }
     );
     return response.data;
-  } catch (error: any) {
-    console.error(
-      `Update publication ${pubId} error:`,
-      error.response?.data || error.message
-    );
-    throw error;
+  } catch (error) {
+    const errMsgPrefix = `Update publication ${pubId} error`;
+    let specificError = "";
+    if (error instanceof AxiosError && error.response?.data?.detail) {
+      specificError = error.response.data.detail;
+    } else if (error instanceof Error) {
+      specificError = error.message;
+    }
+    const errMsg = `${errMsgPrefix}: ${
+      specificError || "Не удалось обновить публикацию"
+    }`;
+    console.error(errMsg, error);
+    throw new Error(errMsg);
   }
 };
 
 export const deleteMyPublication = async (pubId: number): Promise<void> => {
   try {
     await api.delete(`/api/profile/publications/${pubId}/`);
-  } catch (error: any) {
-    console.error(
-      `Delete publication ${pubId} error:`,
-      error.response?.data || error.message
-    );
-    throw error;
+  } catch (error) {
+    const errMsgPrefix = `Delete publication ${pubId} error`;
+    let specificError = "";
+    if (error instanceof AxiosError && error.response?.data?.detail) {
+      specificError = error.response.data.detail;
+    } else if (error instanceof Error) {
+      specificError = error.message;
+    }
+    const errMsg = `${errMsgPrefix}: ${
+      specificError || "Не удалось удалить публикацию"
+    }`;
+    console.error(errMsg, error);
+    throw new Error(errMsg);
   }
 };
 
@@ -206,11 +256,17 @@ export const getPublicUserProfile = async (
     );
     return response.data;
   } catch (error) {
-    const axiosError = error as AxiosError;
-    console.error(
-      `Error fetching public profile for ${publicId}:`,
-      axiosError.response?.data || axiosError.message
-    );
-    throw error;
+    const errMsgPrefix = `Error fetching public profile for ${publicId}`;
+    let specificError = "";
+    if (error instanceof AxiosError && error.response?.data?.detail) {
+      specificError = error.response.data.detail;
+    } else if (error instanceof AxiosError) {
+      specificError = error.message;
+    } else if (error instanceof Error) {
+      specificError = error.message;
+    }
+    const errMsg = `${errMsgPrefix}: ${specificError || "Неизвестная ошибка"}`;
+    console.error(errMsg, error);
+    throw new Error(errMsg);
   }
 };

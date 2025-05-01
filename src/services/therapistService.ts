@@ -1,6 +1,5 @@
 import {
   TherapistProfileReadData,
-  TherapistPhotoData,
   PublicationData,
   TherapistPhotoUploadData,
   PublicationCreateUpdateData,
@@ -9,6 +8,7 @@ import {
 import { PublicProfileData, ApiTherapistListData } from "../types/api";
 import api from "./api";
 import { AxiosError } from "axios";
+import { TherapistPhotoData } from "../types/models";
 
 interface PaginatedResponse<T> {
   count: number;
@@ -98,10 +98,17 @@ export const getTherapistPhotos = async (
 
 export const uploadTherapistPhoto = async (
   therapistId: number,
-  photo: File
+  data: TherapistPhotoUploadData
 ): Promise<TherapistPhotoData> => {
   const formData = new FormData();
-  formData.append("image", photo);
+  formData.append("image", data.image);
+  if (data.caption) {
+    formData.append("caption", data.caption);
+  }
+  if (data.order !== undefined) {
+    formData.append("order", data.order.toString());
+  }
+
   const response = await api.post<TherapistPhotoData>(
     `/api/therapists/${therapistId}/photos/`,
     formData,
@@ -124,10 +131,31 @@ export const deleteTherapistPhoto = async (
 export const updateTherapistPhoto = async (
   therapistId: number,
   photoId: number,
-  photo: File
+  data: Partial<TherapistPhotoUploadData>
 ): Promise<TherapistPhotoData> => {
   const formData = new FormData();
-  formData.append("image", photo);
+  if (data.image) {
+    formData.append("image", data.image);
+  }
+  if (data.caption !== undefined) {
+    formData.append("caption", data.caption);
+  }
+  if (data.order !== undefined) {
+    formData.append("order", data.order.toString());
+  }
+
+  if (
+    formData.entries().next().done &&
+    !data.caption &&
+    data.order === undefined
+  ) {
+    console.warn("Update photo called with no data to update.");
+    const currentPhoto = await api.get<TherapistPhotoData>(
+      `/api/therapists/${therapistId}/photos/${photoId}/`
+    );
+    return currentPhoto.data;
+  }
+
   const response = await api.patch<TherapistPhotoData>(
     `/api/therapists/${therapistId}/photos/${photoId}/`,
     formData,
