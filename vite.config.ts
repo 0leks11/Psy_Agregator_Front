@@ -15,19 +15,17 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path,
-        configure: (proxy, _options) => {
-          proxy.on("error", (err, _req, _res) => {
-            // console.log("proxy error", err);
+        configure: (proxy) => {
+          proxy.on("error", () => {
+            // Добавлен _ к err
+            // console.log("proxy error", _err);
           });
-          proxy.on("proxyReq", (_proxyReq, _req, _res) => {
-            // console.log("Sending Request to the Target:", _req.method, _req.url);
+          proxy.on("proxyReq", () => {
+            // console.log("Sending Request...", _req.method, _req.url);
           });
-          proxy.on("proxyRes", (proxyRes, _req, _res) => {
-            // console.log(
-            //   "Received Response from the Target:",
-            //   proxyRes.statusCode,
-            //   _req.url
-            // );
+          proxy.on("proxyRes", () => {
+            // Добавлен _ к proxyRes
+            // console.log("Received Response...", _proxyRes.statusCode, _req.url);
           });
         },
       },
