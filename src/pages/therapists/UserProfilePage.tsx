@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { getPublicUserProfile } from "../../services/profileService";
 import { PublicProfileData } from "../../types/api";
+import { useAuth } from "../../hooks/useAuth";
 import {
   FullUserData,
   Gender,
@@ -12,7 +13,7 @@ import {
   Language,
 } from "../../types/models";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
-import ErrorMessage from "../../components/common/ErrorMessage";
+import NotFoundPage from "../../pages/NotFoundPage";
 
 // Импортируем компоненты секций
 import ProfileHeaderSection from "../../components/profileSections/identity/ProfileHeaderSection";
@@ -26,52 +27,52 @@ import ProfilePhotoGalleryViewSection from "../../components/profileSections/gal
 
 const UserProfilePage: React.FC = () => {
   const { publicId } = useParams<{ publicId: string }>();
+  const { isAuthenticated } = useAuth();
   const [profileData, setProfileData] = useState<PublicProfileData | null>(
     null
   );
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isNotFoundError, setIsNotFoundError] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
       if (!publicId) {
-        setError("ID профиля не указан.");
+        console.warn("UserProfilePage: publicId is missing.");
+        setIsNotFoundError(true);
+        setLoading(false);
+        return;
+      }
+
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(publicId)) {
+        console.warn(`UserProfilePage: Invalid publicId format: ${publicId}`);
+        setIsNotFoundError(true);
         setLoading(false);
         return;
       }
 
       setLoading(true);
-      setError(null);
+      setIsNotFoundError(false);
       try {
         console.log(
-          "UserProfilePage - Attempting to fetch profile for ID:",
-          publicId
+          `UserProfilePage - Attempting to fetch profile for ID: ${publicId}`
         );
         const data = await getPublicUserProfile(publicId);
-        console.log("UserProfilePage - Fetched profile data:", data);
-        setProfileData(data);
-        // Добавляем логирование публикаций
-        console.log(
-          "UserProfilePage - Publications from API:",
-          data.publications
-        );
-        if (data.publications && data.publications.length > 0) {
-          console.log(
-            "UserProfilePage - First publication content:",
-            data.publications[0].content
+
+        if (data) {
+          console.log("UserProfilePage - Fetched profile data:", data);
+          setProfileData(data);
+        } else {
+          console.warn(
+            `UserProfilePage: API returned no data for publicId: ${publicId}`
           );
+          setIsNotFoundError(true);
+          setProfileData(null);
         }
       } catch (err) {
-        console.error("Ошибка при загрузке профиля:", err);
-        if (err instanceof Error) {
-          if (err.message.includes("404") || err.message.includes("403")) {
-            setError("Профиль не найден или недоступен.");
-          } else {
-            setError("Не удалось загрузить профиль.");
-          }
-        } else {
-          setError("Не удалось загрузить профиль.");
-        }
+        console.error(`Error fetching public profile for ${publicId}:`, err);
+        setIsNotFoundError(true);
       } finally {
         setLoading(false);
       }
@@ -88,19 +89,22 @@ const UserProfilePage: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (isNotFoundError) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <ErrorMessage message={error} />
-      </div>
+      <NotFoundPage
+        contextType={isAuthenticated ? "authenticated" : "public"}
+      />
     );
   }
 
   if (!profileData) {
+    console.warn(
+      "UserProfilePage: profileData is null after loading and isNotFoundError is false. Displaying NotFoundPage as a fallback."
+    );
     return (
-      <div className="container mx-auto px-4 py-8">
-        <ErrorMessage message="Профиль не найден." />
-      </div>
+      <NotFoundPage
+        contextType={isAuthenticated ? "authenticated" : "public"}
+      />
     );
   }
 

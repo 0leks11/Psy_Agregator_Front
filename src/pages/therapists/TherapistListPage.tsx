@@ -1,17 +1,13 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { getTherapists } from "../../services/therapistService";
 import { ApiTherapistListData } from "../../types/api";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import ErrorMessage from "../../components/common/ErrorMessage";
 import TherapistCard from "../../components/therapistList/TherapistCard";
-import { AuthContext } from "../../contexts/authContextDefinition";
+import { useAuth } from "../../hooks/useAuth";
 
 const TherapistListPage: React.FC = () => {
-  const authContext = useContext(AuthContext);
-  if (!authContext) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  const { user } = authContext;
+  const { user } = useAuth();
   const loggedInUserId = user?.id;
 
   const [allTherapists, setAllTherapists] = useState<ApiTherapistListData[]>(

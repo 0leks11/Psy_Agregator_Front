@@ -1,6 +1,6 @@
 // src/components/profileSections/ProfileAboutSection.tsx
-import React, { useState, useEffect, useContext } from "react";
-import { AuthContext } from "../../../contexts/authContextDefinition";
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../../../hooks/useAuth";
 import {
   updateTherapistProfile,
   updateClientProfile,
@@ -20,10 +20,7 @@ const ProfileAboutSection: React.FC<ProfileSectionProps> = ({
   userData,
   isEditable,
 }) => {
-  const { updateUserState } = useContext(AuthContext) || {};
-  if (!updateUserState) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  const { updateUserState } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [aboutText, setAboutText] = useState("");
   const [initialText, setInitialText] = useState("");

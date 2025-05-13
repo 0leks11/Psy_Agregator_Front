@@ -1,72 +1,91 @@
-import React, { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
+// src/App.tsx
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  Outlet, // Для создания "обертки" для публичных страниц
+} from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { UIProvider } from "./contexts/UIContext";
+import AppLayout from "./components/layout/AppLayout"; // Макет для приватной части
 
-// Layout
-import Navbar from "./components/layout/Navbar";
-import Footer from "./components/layout/Footer";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-
-// Pages
+// Публичные страницы
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/authentication/LoginPage";
 import RegisterPage from "./pages/authentication/RegisterPage";
-import TherapistListPage from "./pages/therapists/TherapistListPage";
-import UserProfilePage from "./pages/therapists/UserProfilePage";
-import MyProfilePage from "./pages/account/MyProfilePage";
-import SubscriptionPage from "./pages/account/SubscriptionPage";
-import NotFoundPage from "./pages/NotFoundPage";
+import NotFoundPage from "./pages/NotFoundPage"; // Общая страница 404
 
-// Protected Route Component
-import ProtectedRoute from "./components/common/ProtectedRoute";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import LoadingSpinner from "./components/common/LoadingSpinner";
 
-const App: React.FC = () => {
-  useEffect(() => {
-    console.log("Rendering Routes...");
-  }, []);
+// Компонент-обертка для публичных страниц (без сайдбара)
+const PublicLayout: React.FC = () => {
+  // Здесь можно добавить общий макет для публичных страниц, если он нужен
+  // Например, свой Navbar и Footer, отличные от тех, что в AppLayout
+  return (
+    <div className="flex flex-col min-h-screen bg-slate-100">
+      {" "}
+      {/* Пример фона для публичных страниц */}
+      {/* Можно добавить свой публичный Navbar здесь, если он отличается от приватного */}
+      <main className="flex-grow">
+        <Outlet />{" "}
+        {/* Сюда будут рендериться HomePage, LoginPage, RegisterPage */}
+      </main>
+      {/* Можно добавить свой публичный Footer здесь */}
+    </div>
+  );
+};
+
+// Основной компонент, управляющий роутингом
+const AppRoutesController: React.FC = () => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
-    <AuthProvider>
-      <Router>
-        <div className="flex flex-col min-h-screen bg-gray-50">
-          <Navbar />
-          <main className="flex-grow container mx-auto px-4 py-8">
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<HomePage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/therapists" element={<TherapistListPage />} />
-              <Route path="/users/:publicId" element={<UserProfilePage />} />
+    <Routes>
+      {isAuthenticated ? (
+        // --- Пользователь АУТЕНТИФИЦИРОВАН ---
+        // Все маршруты для аутентифицированного пользователя обрабатываются внутри AppLayout
+        <Route path="/*" element={<AppLayout />} />
+      ) : (
+        // --- Пользователь НЕ АУТЕНТИФИЦИРОВАН ---
+        <Route element={<PublicLayout />}>
+          {" "}
+          {/* Обертка для публичных страниц */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          {/* Для неаутентифицированных пользователей все неизвестные пути ведут на 404 "public" */}
+          <Route path="*" element={<NotFoundPage contextType="public" />} />
+        </Route>
+      )}
+      {/* Общий NotFoundPage, если ни один из вышестоящих не сработал
+          (маловероятно при текущей структуре, но как запасной вариант) */}
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
+  );
+};
 
-              {/* Protected Routes */}
-              <Route
-                path="/my-profile"
-                element={
-                  <ProtectedRoute>
-                    <MyProfilePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/subscription"
-                element={
-                  <ProtectedRoute requiredRole="THERAPIST">
-                    <SubscriptionPage />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Catch All - 404 */}
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </main>
-          <Footer />
-          <ToastContainer position="bottom-right" autoClose={3000} />
-        </div>
-      </Router>
-    </AuthProvider>
+const App: React.FC = () => {
+  return (
+    <Router>
+      <AuthProvider>
+        <UIProvider>
+          <AppRoutesController />
+        </UIProvider>
+      </AuthProvider>
+      <ToastContainer position="bottom-right" autoClose={3000} />
+    </Router>
   );
 };
 

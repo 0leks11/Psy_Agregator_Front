@@ -57,3 +57,11 @@ export const getCurrentUser = async (): Promise<FullUserData | null> => {
     return null;
   }
 };
+
+export const logoutUser = async (): Promise<void> => {
+  try {
+    await api.post("/api/auth/logout/");
+  } catch (error) {
+    console.error("Logout error:", error);
+  }
+};

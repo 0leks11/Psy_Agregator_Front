@@ -1,6 +1,6 @@
-import React, { useState, FormEvent, useContext } from "react";
+import React, { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../../contexts/authContextDefinition";
+import { useAuth } from "../../hooks/useAuth";
 
 interface RegisterFormData {
   email: string;
@@ -14,11 +14,7 @@ interface RegisterFormData {
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
-  const authContext = useContext(AuthContext);
-  if (!authContext) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  const { register } = authContext;
+  const { register, error: authErrorFromContext } = useAuth();
   const [formData, setFormData] = useState<RegisterFormData>({
     email: "",
     password: "",
@@ -30,8 +26,15 @@ const RegisterPage: React.FC = () => {
   });
   const [error, setError] = useState<string>("");
 
+  React.useEffect(() => {
+    if (authErrorFromContext) {
+      setError(authErrorFromContext);
+    }
+  }, [authErrorFromContext]);
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError("");
     if (formData.password !== formData.confirmPassword) {
       setError("Пароли не совпадают");
       return;
@@ -54,18 +57,15 @@ const RegisterPage: React.FC = () => {
 
       const success = await register(apiData);
       if (success) {
-        navigate("/dashboard");
-      } else {
-        setError(
-          "Ошибка при регистрации. Проверьте данные и попробуйте снова."
-        );
+        navigate("/my-profile");
       }
     } catch (err) {
-      setError(
-        `Ошибка при регистрации: ${
-          err instanceof Error ? err.message : "Неизвестная ошибка"
-        }`
-      );
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Неизвестная ошибка при регистрации.";
+      setError(message);
+      console.error("RegisterPage Submit Error:", err);
     }
   };
 
@@ -189,7 +189,7 @@ const RegisterPage: React.FC = () => {
                       name="inviteCode"
                       value={formData.inviteCode}
                       onChange={handleChange}
-                      required
+                      required={formData.role === "THERAPIST"}
                     />
                   </div>
                 )}

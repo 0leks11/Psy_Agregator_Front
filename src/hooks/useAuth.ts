@@ -1,8 +1,5 @@
 import { useContext } from "react";
-import {
-  AuthContext,
-  AuthContextType,
-} from "../contexts/authContextDefinition"; // Исправляем путь
+import { AuthContext, AuthContextType } from "../contexts/AuthContext"; // Изменено на AuthContext.tsx
 
 // Custom Hook to use Auth context easily
 export const useAuth = (): AuthContextType => {

@@ -12,10 +12,7 @@ const HomePage: React.FC = () => {
             психолога для решения ваших проблем и улучшения качества жизни.
           </p>
           <div className="d-grid gap-2 d-md-flex justify-content-md-start">
-            <Link
-              to="/therapists"
-              className="btn btn-primary btn-lg px-4 me-md-2"
-            >
+            <Link to="/login" className="btn btn-primary btn-lg px-4 me-md-2">
               Найти психолога
             </Link>
             <Link

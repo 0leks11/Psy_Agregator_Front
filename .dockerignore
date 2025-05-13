@@ -1,0 +1,10 @@
+# frontend/.dockerignore
+.git
+.gitignore
+node_modules/
+dist/ # Результат сборки, Dockerfile сделает сам
+build/ # Если папка сборки называется build
+.env*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

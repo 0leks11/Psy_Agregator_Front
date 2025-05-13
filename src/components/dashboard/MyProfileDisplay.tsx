@@ -97,12 +97,12 @@ const MyProfileDisplay: React.FC = () => {
                     <div className="flex flex-wrap gap-2">
                       {typedUser.therapist_profile.skills.map(
                         (skill: Skill) => (
-                          <span
-                            key={skill.id}
-                            className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
-                          >
-                            {skill.name}
-                          </span>
+                        <span
+                          key={skill.id}
+                          className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
+                        >
+                          {skill.name}
+                        </span>
                         )
                       )}
                     </div>
@@ -118,12 +118,12 @@ const MyProfileDisplay: React.FC = () => {
                     <div className="flex flex-wrap gap-2">
                       {typedUser.therapist_profile.languages.map(
                         (language: Language) => (
-                          <span
-                            key={language.id}
-                            className="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full"
-                          >
-                            {language.name}
-                          </span>
+                        <span
+                          key={language.id}
+                          className="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full"
+                        >
+                          {language.name}
+                        </span>
                         )
                       )}
                     </div>

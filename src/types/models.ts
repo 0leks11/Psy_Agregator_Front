@@ -180,3 +180,14 @@ export interface ApiTherapistListData {
 export interface ProfilePublicationsSectionProps extends ProfileSectionProps {
   initialPublications?: Publication[] | null;
 }
+
+// Добавляем новый интерфейс для данных регистрации
+export interface UserRegistrationData {
+  email: string;
+  password: string;
+  password_confirm: string;
+  first_name: string;
+  last_name: string;
+  role: "CLIENT" | "THERAPIST" | "ADMIN";
+  invite_code?: string;
+}

@@ -1,5 +1,4 @@
 import React from "react";
-import DashboardSidebar from "./DashboardSidebar";
 
 interface Props {
   children: React.ReactNode; // Основной контент страницы
@@ -11,9 +10,7 @@ const DashboardLayout: React.FC<Props> = ({ children }) => {
       {" "}
       {/* Примерная высота минус хедер/футер */}
       {/* Сайдбар */}
-      <aside className="w-full md:w-64 lg:w-72 flex-shrink-0">
-        <DashboardSidebar />
-      </aside>
+      <aside className="w-full md:w-64 lg:w-72 flex-shrink-0"></aside>
       {/* Основной контент */}
       <section className="flex-grow bg-white shadow-md rounded-lg p-4 sm:p-6 md:p-8">
         {children}

@@ -91,12 +91,12 @@ const UserCabinetPage: React.FC = () => {
                   <div className="flex flex-wrap gap-2">
                     {typedUser.client_profile.interested_topics.map(
                       (topicId: number) => (
-                        <span
+                      <span
                           key={topicId}
-                          className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
-                        >
+                        className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
+                      >
                           {`Тема ID: ${topicId}`}
-                        </span>
+                      </span>
                       )
                     )}
                   </div>
