@@ -1,82 +1,142 @@
 // src/contexts/UIContext.tsx
-import React, {
-    createContext,
-    useState,
-    useCallback,
-    useEffect,
-    ReactNode,
-    useContext,
-  } from "react";
-  import { useLocation } from "react-router-dom"; // UIContext будет ВНУТРИ Router
-  
-  // Определяем тип для UIContext
-  export interface UIContextType {
-    isSidebarExpanded: boolean;
-    toggleSidebar: () => void;
-    isChatPanelOpen: boolean;
-    toggleChatPanel: () => void;
-    openChatWithUser: (userId: string | number) => void; // Для открытия чата
-  }
-  
-  const UIContext = createContext<UIContextType | undefined>(undefined);
-  
-  export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const location = useLocation();
-  
-    // Состояние для основного сайдбара
-    const [isSidebarInitiallyExpanded, setIsSidebarInitiallyExpanded] = useState(true);
-    const [isSidebarManuallyExpanded, setIsSidebarManuallyExpanded] = useState<boolean | null>(null);
-  
-    const isSidebarEffectivelyExpanded = isSidebarManuallyExpanded ?? isSidebarInitiallyExpanded;
-  
-    const toggleSidebar = useCallback(() => {
-      setIsSidebarManuallyExpanded((prev) => !(prev ?? isSidebarInitiallyExpanded));
-    }, [isSidebarInitiallyExpanded]);
-  
-    // Состояние для панели чатов
-    const [isChatPanelOpen, setIsChatPanelOpen] = useState(false);
-  
-    const toggleChatPanel = useCallback(() => {
-      setIsChatPanelOpen((prev) => !prev);
-    }, []);
-  
-    const openChatWithUser = useCallback((userId: string | number) => {
-      console.log(`UIContext: Opening chat with user ${userId} (заглушка)`);
-      setIsChatPanelOpen(true); // Открываем панель чатов
-      // TODO: Добавить логику выбора конкретного чата в панели
-    }, []);
-  
-    // Логика автоматического сворачивания/разворачивания сайдбара
-    useEffect(() => {
-      const isTherapistListPage = location.pathname === "/therapists";
-      if (isTherapistListPage) {
-        setIsSidebarInitiallyExpanded(false);
-        if (isSidebarManuallyExpanded === null) {
-          setIsSidebarManuallyExpanded(false);
-        }
-      } else {
-        setIsSidebarInitiallyExpanded(true);
-        if (isSidebarManuallyExpanded === null) {
-          setIsSidebarManuallyExpanded(null);
-        }
-      }
-    }, [location.pathname, isSidebarManuallyExpanded]);
-  
-    const value: UIContextType = {
-      isSidebarExpanded: isSidebarEffectivelyExpanded,
-      toggleSidebar,
-      isChatPanelOpen,
-      toggleChatPanel,
-      openChatWithUser,
-    };
-  
-    return <UIContext.Provider value={value}>{children}</UIContext.Provider>;
-  };
-  
-  export const useUI = (): UIContextType => {
-    const context = useContext(UIContext);
-    if (context === undefined) {
-      throw new Error("useUI must be used within a UIProvider");
+import React, { useState, useCallback, useEffect, ReactNode } from "react";
+import { useLocation } from "react-router-dom";
+import { useChat } from "../hooks/useChat";
+import { UIContext } from "./uiContextDefinition";
+
+// Определяем тип для UIContext
+export interface UIContextType {
+  isSidebarExpanded: boolean;
+  toggleSidebar: () => void;
+  isChatPanelOpen: boolean;
+  toggleChatPanel: (
+    forceState?: boolean,
+    targetUserId?: string | number
+  ) => void;
+  openChatWithUser: (userId: string | number) => void;
+}
+
+export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const location = useLocation();
+  const { initiateChat, setActiveConversationId } = useChat();
+
+  // Состояние для основного сайдбара
+  const [isSidebarInitiallyExpanded, setIsSidebarInitiallyExpanded] =
+    useState(true);
+  const [isSidebarManuallyExpanded, setIsSidebarManuallyExpanded] = useState<
+    boolean | null
+  >(null);
+
+  const isSidebarEffectivelyExpanded =
+    isSidebarManuallyExpanded ?? isSidebarInitiallyExpanded;
+
+  // Состояние для панели чатов
+  const [isChatPanelOpen, setIsChatPanelOpen] = useState(false);
+
+  const toggleSidebar = useCallback(() => {
+    const nextManualState = !(
+      isSidebarManuallyExpanded ?? isSidebarInitiallyExpanded
+    );
+    setIsSidebarManuallyExpanded(nextManualState);
+
+    // Если разворачиваем сайдбар и панель чатов открыта, закрываем её
+    if (
+      (nextManualState === true ||
+        (nextManualState === null && isSidebarInitiallyExpanded)) &&
+      isChatPanelOpen
+    ) {
+      setIsChatPanelOpen(false);
+      setActiveConversationId(null);
     }
-    return context;
+  }, [
+    isSidebarInitiallyExpanded,
+    isSidebarManuallyExpanded,
+    isChatPanelOpen,
+    setActiveConversationId,
+  ]);
+
+  const toggleChatPanel = useCallback(
+    (forceState?: boolean, targetUserId?: string | number) => {
+      setIsChatPanelOpen((prevPanelOpen) => {
+        const nextPanelState =
+          forceState !== undefined ? forceState : !prevPanelOpen;
+
+        if (nextPanelState) {
+          // При открытии панели чатов
+          setIsSidebarManuallyExpanded(false);
+          if (targetUserId) {
+            initiateChat(targetUserId).then((chatRoomId) => {
+              if (chatRoomId) {
+                setActiveConversationId(chatRoomId);
+              }
+            });
+          } else if (!targetUserId && !isChatPanelOpen) {
+            setActiveConversationId(null);
+          }
+        } else {
+          // При закрытии панели чатов
+          setActiveConversationId(null);
+          if (isSidebarManuallyExpanded === false && prevPanelOpen) {
+            setIsSidebarManuallyExpanded(null);
+          }
+        }
+        return nextPanelState;
+      });
+    },
+    [
+      isSidebarManuallyExpanded,
+      setActiveConversationId,
+      initiateChat,
+      isChatPanelOpen,
+    ]
+  );
+
+  const openChatWithUser = useCallback(
+    async (targetUserId: string | number) => {
+      console.log(`UIContext: Открытие чата с пользователем ${targetUserId}`);
+      const chatRoomId = await initiateChat(targetUserId);
+      if (chatRoomId) {
+        setActiveConversationId(chatRoomId);
+        setIsChatPanelOpen(true);
+        setIsSidebarManuallyExpanded(false);
+      } else {
+        console.error(
+          `UIContext: Не удалось инициировать чат с пользователем ${targetUserId}`
+        );
+      }
+    },
+    [initiateChat, setActiveConversationId]
+  );
+
+  useEffect(() => {
+    const isTherapistListPage = location.pathname === "/therapists";
+    const isLoginPage = location.pathname === "/login";
+    const isRegisterPage = location.pathname === "/register";
+    const isHomePage = location.pathname === "/";
+
+    if (isLoginPage || isRegisterPage || (isHomePage && !isChatPanelOpen)) {
+      // На публичных страницах сайдбар не нужен
+      return;
+    }
+
+    if (isTherapistListPage && !isChatPanelOpen) {
+      if (isSidebarManuallyExpanded === null) {
+        setIsSidebarInitiallyExpanded(false);
+      }
+    } else {
+      if (isSidebarManuallyExpanded === null) {
+        setIsSidebarInitiallyExpanded(true);
+      }
+    }
+  }, [location.pathname, isChatPanelOpen, isSidebarManuallyExpanded]);
+
+  const value: UIContextType = {
+    isSidebarExpanded: isSidebarEffectivelyExpanded,
+    toggleSidebar,
+    isChatPanelOpen,
+    toggleChatPanel,
+    openChatWithUser,
   };
+
+  return <UIContext.Provider value={value}>{children}</UIContext.Provider>;
+};

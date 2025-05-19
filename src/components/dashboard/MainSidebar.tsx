@@ -1,27 +1,23 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { useUI } from "../../contexts/UIContext";
+import { useUI } from "../../hooks/useUI";
 import SidebarItem from "../sidebar/SidebarItem";
 import SidebarSubscriptionItem from "../sidebar/SidebarSubscriptionItem";
 import {
   CreditCardIcon,
   MagnifyingGlassIcon,
   ArrowLeftOnRectangleIcon,
-  ChatBubbleLeftRightIcon, // Убедитесь, что иконка выхода импортирована
+  ChatBubbleLeftRightIcon,
   ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon,
 } from "@heroicons/react/24/outline";
-// ... импорты иконок ...
 import { toast } from "react-toastify";
 
-const DEFAULT_AVATAR_PLACEHOLDER = "/default-avatar.png"; // Определяем плейсхолдер
+const DEFAULT_AVATAR_PLACEHOLDER = "/default-avatar.png";
 
 const MainSidebar: React.FC = () => {
-  const {
-    user, // Получаем весь объект user
-    logout,
-  } = useAuth();
+  const { user, logout } = useAuth();
   const { isSidebarExpanded, toggleSidebar, toggleChatPanel } = useUI();
   const navigate = useNavigate();
 
@@ -29,8 +25,8 @@ const MainSidebar: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await logout(); // logout из AuthContext больше не делает navigate
-      navigate("/"); // Редирект теперь будет обрабатываться в AppLayout или ProtectedRoute
+      await logout();
+      navigate("/");
       toast.info("Вы успешно вышли из системы.");
     } catch (error) {
       toast.error("Ошибка при выходе из системы.");
@@ -38,7 +34,10 @@ const MainSidebar: React.FC = () => {
     }
   };
 
-  // Получаем URL аватарки или используем плейсхолдер
+  const handleShowChats = () => {
+    toggleChatPanel(); // Просто открывает/закрывает панель чатов
+  };
+
   const userAvatarUrl =
     user?.profile?.profile_picture_url || DEFAULT_AVATAR_PLACEHOLDER;
 
@@ -54,7 +53,7 @@ const MainSidebar: React.FC = () => {
           </span>
         )}
         <button
-          onClick={toggleSidebar} // <--- Используем из контекста
+          onClick={toggleSidebar}
           className="p-2 text-gray-500 hover:text-indigo-600 focus:outline-none"
           aria-label={
             isSidebarExpanded ? "Свернуть сайдбар" : "Развернуть сайдбар"
@@ -72,15 +71,15 @@ const MainSidebar: React.FC = () => {
       <nav className="flex-grow p-2 space-y-1 overflow-y-auto">
         <SidebarItem
           to="/my-profile"
-          icon={userAvatarUrl} // <--- Передаем URL аватарки
-          isAvatar={true} // <--- Указываем, что это аватар (хотя renderIcon уже это определит)
+          icon={userAvatarUrl}
+          isAvatar={true}
           label={
             user?.first_name ? `Страница ${user.first_name}` : "Моя страница"
-          } // Персонализированный label
+          }
           isExpanded={isSidebarExpanded}
           title={
             user?.first_name ? `Профиль ${user.first_name}` : "Мой профиль"
-          } // Персонализированный title
+          }
         />
         <SidebarItem
           to="/therapists"
@@ -100,12 +99,8 @@ const MainSidebar: React.FC = () => {
           icon={ChatBubbleLeftRightIcon}
           label="Сообщения"
           isExpanded={isSidebarExpanded}
-          onClick={(e) => {
-            e.preventDefault();
-            toggleChatPanel(); // <--- Используем из контекста
-            // toast.info("Раздел сообщений в разработке!"); // Можно оставить или убрать
-          }}
-          isButton={true} // Делаем кнопкой, т.к. нет 'to'
+          onClick={handleShowChats}
+          isButton={true}
         />
       </nav>
 

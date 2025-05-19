@@ -1,13 +1,12 @@
 // src/components/layout/AppLayout.tsx
 import React from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { useUI } from "../../contexts/UIContext";
+import { useUI } from "../../hooks/useUI";
 import { useAuth } from "../../contexts/AuthContext"; // Нужен для ProtectedRoute
 import MainSidebar from "../dashboard/MainSidebar"; // Убедитесь, что путь правильный
 import ChatListPanel from "../sidebar/ChatListPanel"; // Убедитесь, что путь правильный
 import ProtectedRoute from "../common/ProtectedRoute"; // Ваш компонент защиты
 import Footer from "./Footer";
-
 // Приватные страницы
 import MyProfilePage from "../../pages/account/MyProfilePage";
 import TherapistListPage from "../../pages/therapists/TherapistListPage";
@@ -17,7 +16,7 @@ import NotFoundPage from "../../pages/NotFoundPage"; // Для приватно�
 import LoadingSpinner from "../common/LoadingSpinner";
 
 const AppLayout: React.FC = () => {
-  const { isSidebarExpanded } = useUI();
+  const { isSidebarExpanded, isChatPanelOpen } = useUI();
   const { isAuthenticated, loading: authLoading } = useAuth(); // Получаем isAuthenticated для явной проверки
   const location = useLocation();
 
@@ -46,11 +45,12 @@ const AppLayout: React.FC = () => {
   return (
     <div className="flex h-screen bg-gray-50">
       <MainSidebar />
-      <ChatListPanel />
+      {isChatPanelOpen && <ChatListPanel />}
 
       <div
         className={`flex flex-col flex-grow transition-all duration-300 ease-in-out
-                            ${isSidebarExpanded ? "ml-64" : "ml-20"}`}
+                    ${isSidebarExpanded ? "ml-64" : "ml-20"}
+                    ${isChatPanelOpen ? "mr-80" : ""}`}
       >
         {/* Можно добавить приватный Navbar здесь, если он нужен над контентом */}
         <main className="flex-grow overflow-y-auto">

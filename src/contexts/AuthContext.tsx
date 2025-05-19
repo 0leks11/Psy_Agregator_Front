@@ -121,9 +121,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     } catch (error: unknown) {
       console.error("AuthProvider: Ошибка при вызове API логаута", error);
     } finally {
-      localStorage.removeItem("authToken");
-      setUser(null);
-      setToken(null);
+    localStorage.removeItem("authToken");
+    setUser(null);
+    setToken(null);
       setAuthError(null);
       // НЕ ДЕЛАЕМ navigate ЗДЕСЬ
     }

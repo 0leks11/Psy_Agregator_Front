@@ -4,12 +4,13 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Navigate,
+  
   Outlet, // Для создания "обертки" для публичных страниц
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { UIProvider } from "./contexts/UIContext";
 import AppLayout from "./components/layout/AppLayout"; // Макет для приватной части
+import { ChatProvider } from "./contexts/ChatContext";
 
 // Публичные страницы
 import HomePage from "./pages/HomePage";
@@ -81,7 +82,9 @@ const App: React.FC = () => {
     <Router>
       <AuthProvider>
         <UIProvider>
-          <AppRoutesController />
+          <ChatProvider>
+            <AppRoutesController />
+          </ChatProvider>
         </UIProvider>
       </AuthProvider>
       <ToastContainer position="bottom-right" autoClose={3000} />
