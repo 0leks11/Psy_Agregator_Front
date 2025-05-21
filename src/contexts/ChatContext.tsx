@@ -4,7 +4,7 @@ import { websocketService } from "../services/websocketService";
 import { useAuth } from "./AuthContext";
 import api from "../services/api";
 import { Message, Conversation } from "../types/messaging";
-import { ChatContextType } from "../hooks/chatHooks";
+import { ChatContextType } from "../hooks/useChat";
 import { ChatContext } from "./chatContextDefinition";
 
 // Типы для WebSocket сообщений

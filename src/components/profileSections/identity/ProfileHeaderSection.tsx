@@ -17,8 +17,8 @@ interface ProfileSectionProps {
   isEditable: boolean;
 }
 
-// Default Avatar Placeholder (adjust path if needed)
-const defaultAvatar = "/default-avatar.png";
+// Дефолтный URL аватара, собранный из констант
+const BACKEND_DEFAULT_AVATAR_URL = "default-avatar.png";
 
 const ProfileHeaderSection: React.FC<ProfileSectionProps> = ({
   userData,
@@ -39,7 +39,9 @@ const ProfileHeaderSection: React.FC<ProfileSectionProps> = ({
     if (userData) {
       setFirstName(userData.first_name || "");
       setLastName(userData.last_name || "");
-      setAvatarPreview(userData.profile?.profile_picture_url || defaultAvatar);
+      // setAvatarPreview(
+      //   userData.profile?.profile_picture_url || BACKEND_DEFAULT_AVATAR_URL
+      // );
     }
   }, [userData]);
 
@@ -50,7 +52,9 @@ const ProfileHeaderSection: React.FC<ProfileSectionProps> = ({
     if (userData) {
       setFirstName(userData.first_name || "");
       setLastName(userData.last_name || "");
-      setAvatarPreview(userData.profile?.profile_picture_url || defaultAvatar);
+      // setAvatarPreview(
+      //   userData.profile?.profile_picture_url || BACKEND_DEFAULT_AVATAR_URL
+      // );
     }
     setAvatarFile(null); // Clear selected file
     setIsEditing(false);
@@ -128,8 +132,9 @@ const ProfileHeaderSection: React.FC<ProfileSectionProps> = ({
   const triggerFileInput = () => {
     fileInputRef.current?.click();
   };
+  console.log("avatarPreview", avatarPreview);
 
-  const currentAvatar = avatarPreview || defaultAvatar;
+  const currentAvatar = avatarPreview || BACKEND_DEFAULT_AVATAR_URL;
   const displayName = isEditing
     ? `${firstName} ${lastName}`
     : `${userData?.first_name || ""} ${userData?.last_name || ""}`;
@@ -145,12 +150,9 @@ const ProfileHeaderSection: React.FC<ProfileSectionProps> = ({
         {/* Avatar Display/Edit */}
         <div className="relative mb-4">
           <img
-            src={currentAvatar}
+            src={currentAvatar || BACKEND_DEFAULT_AVATAR_URL}
             alt="Profile Avatar"
             className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-md"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = defaultAvatar;
-            }} // Fallback if src is invalid
           />
           {isEditable && isEditing && (
             <>

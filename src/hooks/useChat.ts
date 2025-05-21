@@ -1,6 +1,22 @@
 import { useContext } from "react";
 import { ChatContext } from "../contexts/chatContextDefinition";
-import { ChatContextType } from "./chatHooks";
+import { Message, Conversation } from "../types/messaging";
+
+// Используем типы из messaging.ts
+export type ChatContextType = {
+  conversations: Conversation[];
+  currentMessages: Message[];
+  isLoadingConversations: boolean;
+  isLoadingMessages: boolean;
+  activeConversationId: string | number | null;
+  fetchConversations: () => Promise<void>;
+  fetchMessages: (conversationId: string | number) => Promise<void>;
+  sendMessage: (conversationId: string | number, text: string) => Promise<void>;
+  setActiveConversationId: (id: string | number | null) => void;
+  initiateChat: (
+    targetUserId: string | number
+  ) => Promise<string | number | null>;
+};
 
 export const useChat = (): ChatContextType => {
   const context = useContext(ChatContext);

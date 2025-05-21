@@ -2,9 +2,10 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { SidebarItemProps } from "../../types/sidebar"; // Используем обновленный тип
+import { API_URL, DEFAULT_AVATAR_URL } from "../../constants";
 
-// Плейсхолдер, если аватар не загрузится (убедитесь, что он есть в public/)
-const DEFAULT_AVATAR_PLACEHOLDER = "/default-avatar.png";
+// Дефолтный URL аватара, собранный из констант
+const BACKEND_DEFAULT_AVATAR_URL = `${API_URL}${DEFAULT_AVATAR_URL}`;
 
 const SidebarItem: React.FC<SidebarItemProps> = ({
   to,
@@ -27,12 +28,12 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
       // Случай 1: isAvatar=true, icon - это URL аватара
       return (
         <img
-          src={icon || DEFAULT_AVATAR_PLACEHOLDER} // Используем URL или плейсхолдер
+          src={icon || BACKEND_DEFAULT_AVATAR_URL} // Используем URL или дефолт с бэкенда
           alt={label}
           className={`flex-shrink-0 object-cover rounded-full ${
             isExpanded ? "w-12 h-12 mr-2.5" : "w-12 h-12 mx-auto" // Размеры для аватара
           }`}
-          onError={(e) => (e.currentTarget.src = DEFAULT_AVATAR_PLACEHOLDER)}
+          onError={(e) => (e.currentTarget.src = BACKEND_DEFAULT_AVATAR_URL)}
         />
       );
     } else if (typeof icon === "string") {

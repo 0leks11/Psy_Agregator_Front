@@ -4,7 +4,6 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  
   Outlet, // Для создания "обертки" для публичных страниц
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
@@ -81,11 +80,11 @@ const App: React.FC = () => {
   return (
     <Router>
       <AuthProvider>
-        <UIProvider>
-          <ChatProvider>
+        <ChatProvider>
+          <UIProvider>
             <AppRoutesController />
-          </ChatProvider>
-        </UIProvider>
+          </UIProvider>
+        </ChatProvider>
       </AuthProvider>
       <ToastContainer position="bottom-right" autoClose={3000} />
     </Router>

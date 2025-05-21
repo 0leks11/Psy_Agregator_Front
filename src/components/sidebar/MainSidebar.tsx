@@ -2,8 +2,8 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useUI } from "../../hooks/useUI";
-import SidebarItem from "../sidebar/SidebarItem";
-import SidebarSubscriptionItem from "../sidebar/SidebarSubscriptionItem";
+import SidebarItem from "./SidebarItem";
+import SidebarSubscriptionItem from "./SidebarSubscriptionItem";
 import {
   CreditCardIcon,
   MagnifyingGlassIcon,

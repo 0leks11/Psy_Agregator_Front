@@ -3,7 +3,7 @@ import React from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useUI } from "../../hooks/useUI";
 import { useAuth } from "../../contexts/AuthContext"; // Нужен для ProtectedRoute
-import MainSidebar from "../dashboard/MainSidebar"; // Убедитесь, что путь правильный
+import MainSidebar from "../sidebar/MainSidebar"; // Убедитесь, что путь правильный
 import ChatListPanel from "../sidebar/ChatListPanel"; // Убедитесь, что путь правильный
 import ProtectedRoute from "../common/ProtectedRoute"; // Ваш компонент защиты
 import Footer from "./Footer";
